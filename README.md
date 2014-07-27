@@ -51,6 +51,8 @@ or
 
 When you specify a `primaryKey` (see below), objects in the realm with same primary key value will be replaced instead of a duplicate version of the object added.
 
+Use the `-JSONDictionary` method to get a JSON-ready dictionary for your network requests.
+
 ### Configuration
 
 You should specify the inbound and outbound JSON mapping on your `RLMObject` subclass like this:
