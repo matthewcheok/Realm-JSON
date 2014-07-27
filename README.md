@@ -49,7 +49,7 @@ or
 
       [MCEpisode createInRealm:[RLMRealm defaultRealm] withJSONDictionary:dictionary];
 
-When you specify a `primaryKey` (see below), objects in the realm with same values will be replaced instead of a duplication version of the object added.
+When you specify a `primaryKey` (see below), objects in the realm with same primary key value will be replaced instead of a duplicate version of the object added.
 
 ### Configuration
 
