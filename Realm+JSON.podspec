@@ -4,7 +4,7 @@ Pod::Spec.new do |s|
   s.ios.deployment_target   = "6.0"
   s.osx.deployment_target   = "10.8"
   s.license  = { :type => 'MIT', :file => 'LICENSE' }
-  s.summary  = 'Concise Mantle-like way of working with Realm and JSON.'
+  s.summary  = 'A concise Mantle-like way of working with Realm and JSON.'
   s.homepage = 'https://github.com/matthewcheok/Realm-JSON'
   s.author   = { 'Matthew Cheok' => 'cheok.jz@gmail.com' }
   s.requires_arc = true
