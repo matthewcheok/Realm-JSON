@@ -12,7 +12,7 @@
 
 @interface RLMObject (JSON)
 
-+ (void)createInRealm:(RLMRealm *)realm withJSONArray:(NSArray *)array;
++ (NSArray *)createInRealm:(RLMRealm *)realm withJSONArray:(NSArray *)array;
 + (instancetype)createInRealm:(RLMRealm *)realm withJSONDictionary:(NSDictionary *)dictionary;
 
 - (instancetype)initWithJSONDictionary:(NSDictionary *)dictionary;

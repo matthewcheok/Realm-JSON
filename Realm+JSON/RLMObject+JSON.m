@@ -1,4 +1,4 @@
- //
+//
 //  RLMObject+JSON.m
 //  RealmJSONDemo
 //
@@ -22,7 +22,11 @@ static id MCValueFromInvocation(id object, SEL selector) {
 }
 
 static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
-	const char *type = property_getAttributes(class_getProperty(class, [key UTF8String]));
+	const objc_property_t property = class_getProperty(class, [key UTF8String]);
+    if (!property) {
+        [NSException raise:NSInternalInconsistencyException format:@"Class %@ does not have property %@", class, key];
+    }
+	const char *type = property_getAttributes(property);
 	return [NSString stringWithUTF8String:type];
 }
 
@@ -35,12 +39,17 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 
 @implementation RLMObject (JSON)
 
-+ (void)createInRealm:(RLMRealm *)realm withJSONArray:(NSArray *)array {
++ (NSArray *)createInRealm:(RLMRealm *)realm withJSONArray:(NSArray *)array {
+    NSMutableArray *result = [NSMutableArray array];
+    
 	[realm beginWriteTransaction];
 	for (NSDictionary *dictionary in array) {
-		[self mc_createOrUpdateInRealm:realm withJSONDictionary:dictionary];
+		id object = [self mc_createOrUpdateInRealm:realm withJSONDictionary:dictionary];
+        [result addObject:object];
 	}
 	[realm commitWriteTransaction];
+    
+    return [result copy];
 }
 
 + (instancetype)createInRealm:(RLMRealm *)realm withJSONDictionary:(NSDictionary *)dictionary {
@@ -54,7 +63,7 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 - (instancetype)initWithJSONDictionary:(NSDictionary *)dictionary {
 	self = [super init];
 	if (self) {
-		[self mc_setValuesFromJSONDictionary:dictionary shouldModifiyRealm:NO];
+		[self mc_setValuesFromJSONDictionary:dictionary inRealm:nil];
 	}
 	return self;
 }
@@ -67,42 +76,46 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 
 + (instancetype)mc_createFromJSONDictionary:(NSDictionary *)dictionary {
 	id object = [[self alloc] init];
-	[object mc_setValuesFromJSONDictionary:dictionary shouldModifiyRealm:NO];
+	[object mc_setValuesFromJSONDictionary:dictionary inRealm:nil];
 	return object;
 }
 
 + (instancetype)mc_createOrUpdateInRealm:(RLMRealm *)realm withJSONDictionary:(NSDictionary *)dictionary {
-	static NSString *primaryKey = nil;
-	static NSString *primaryPredicate = nil;
-	static NSString *primarykeyPath = nil;
-	if (!primaryKey) {
-		SEL selector = NSSelectorFromString(@"primaryKey");
-		if ([self respondsToSelector:selector]) {
-			primaryKey = MCValueFromInvocation(self, selector);
-		}
-
-		if (primaryKey) {
-			NSDictionary *inboundMapping = [self mc_inboundMapping];
-			primarykeyPath = [[inboundMapping allKeysForObject:primaryKey] firstObject];
-			primaryPredicate = [NSString stringWithFormat:@"%@ = %%@", primaryKey];
-		}
+	if (!dictionary || [dictionary isEqual:[NSNull null]]) {
+		return nil;
 	}
+
+	NSString *primaryKey = nil;
+	NSString *primaryPredicate = nil;
+	NSString *primaryKeyPath = nil;
+//	if (!primaryKey) {
+	SEL selector = NSSelectorFromString(@"primaryKey");
+	if ([self respondsToSelector:selector]) {
+		primaryKey = MCValueFromInvocation(self, selector);
+	}
+
+	if (primaryKey) {
+		NSDictionary *inboundMapping = [self mc_inboundMapping];
+		primaryKeyPath = [[inboundMapping allKeysForObject:primaryKey] firstObject];
+		primaryPredicate = [NSString stringWithFormat:@"%@ = %%@", primaryKey];
+	}
+//	}
 
 	id object = nil;
 	if (primaryKey) {
-		id primaryKeyValue = [dictionary valueForKeyPath:primarykeyPath];
+		id primaryKeyValue = [dictionary valueForKeyPath:primaryKeyPath];
 		RLMArray *array = [self objectsInRealm:realm where:primaryPredicate, primaryKeyValue];
 
 		if (array.count > 0) {
 			object = [array firstObject];
-			[object mc_setValuesFromJSONDictionary:dictionary shouldModifiyRealm:YES];
+			[object mc_setValuesFromJSONDictionary:dictionary inRealm:realm];
 //			NSLog(@"updated object with \"%@\" value %@", primaryKey, primaryKeyValue);
 		}
 	}
 
 	if (!object) {
 		object = [[self alloc] init];
-		[object mc_setValuesFromJSONDictionary:dictionary shouldModifiyRealm:YES];
+		[object mc_setValuesFromJSONDictionary:dictionary inRealm:realm];
 		[realm addObject:object];
 //		NSLog(@"created object with \"%@\" value %@", primaryKey, [dictionary valueForKeyPath:primarykeyPath]);
 	}
@@ -110,7 +123,7 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 	return object;
 }
 
-- (void)mc_setValuesFromJSONDictionary:(NSDictionary *)dictionary shouldModifiyRealm:(BOOL)shouldModifyRealm {
+- (void)mc_setValuesFromJSONDictionary:(NSDictionary *)dictionary inRealm:(RLMRealm *)realm {
 	NSDictionary *mapping = [[self class] mc_inboundMapping];
 
 	for (NSString *dictionaryKeyPath in mapping) {
@@ -119,13 +132,17 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 		id value = [dictionary valueForKeyPath:dictionaryKeyPath];
 
 		if (value) {
-			Class modelClass = [self class];
+			Class modelClass = [[self class] mc_normalizedClass];
 			Class propertyClass = [modelClass mc_classForPropertyKey:objectKeyPath];
 			SEL selector = NSSelectorFromString([objectKeyPath stringByAppendingString:@"JSONTransformer"]);
 
 			if ([propertyClass isSubclassOfClass:[RLMObject class]]) {
-				if (shouldModifyRealm) {
-					value = [propertyClass mc_createOrUpdateInRealm:self.realm withJSONDictionary:value];
+				if (!value || [value isEqual:[NSNull null]]) {
+					continue;
+				}
+
+				if (realm) {
+					value = [propertyClass mc_createOrUpdateInRealm:realm withJSONDictionary:value];
 				}
 				else {
 					value = [propertyClass mc_createFromJSONDictionary:value];
@@ -137,8 +154,8 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 
 				Class itemClass = NSClassFromString(array.objectClassName);
 				for (NSDictionary *itemDictionary in(NSArray *) value) {
-					if (shouldModifyRealm) {
-						id item = [itemClass mc_createOrUpdateInRealm:self.realm withJSONDictionary:itemDictionary];
+					if (realm) {
+						id item = [itemClass mc_createOrUpdateInRealm:realm withJSONDictionary:itemDictionary];
 						[array addObject:item];
 					}
 					else {
@@ -146,6 +163,7 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 						[array addObject:item];
 					}
 				}
+				continue;
 			}
 			else {
 				NSValueTransformer *transformer = nil;
@@ -157,7 +175,25 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 				}
 
 				if (transformer) {
+                    if ([value isEqual:[NSNull null]]) {
+                        value = nil;
+                    }
 					value = [transformer transformedValue:value];
+                    if (!value) {
+                        value = [NSNull null];
+                    }
+				}
+
+				if ([value isEqual:[NSNull null]]) {
+                    if ([propertyClass isSubclassOfClass:[NSDate class]]) {
+						value = [NSDate distantPast];
+					}
+					else if ([propertyClass isSubclassOfClass:[NSString class]]) {
+						value = @"";
+					}
+					else {
+						value = @0;
+					}
 				}
 			}
 
@@ -175,19 +211,19 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 
 		id value = [self valueForKeyPath:objectKeyPath];
 		if (value) {
-			Class modelClass = [self class];
+			Class modelClass = [[self class] mc_normalizedClass];
 			Class propertyClass = [modelClass mc_classForPropertyKey:objectKeyPath];
 			SEL selector = NSSelectorFromString([objectKeyPath stringByAppendingString:@"JSONTransformer"]);
 
-            if ([propertyClass isSubclassOfClass:[RLMObject class]]) {
-                value = [value mc_createJSONDictionary];
+			if ([propertyClass isSubclassOfClass:[RLMObject class]]) {
+				value = [value mc_createJSONDictionary];
 			}
 			else if ([propertyClass isSubclassOfClass:[RLMArray class]]) {
-                NSMutableArray *array = [NSMutableArray array];
-                for (id item in (RLMArray *)value) {
-                    [array addObject:[item mc_createJSONDictionary]];
-                }
-                value = [array copy];
+				NSMutableArray *array = [NSMutableArray array];
+				for (id item in(RLMArray *) value) {
+					[array addObject:[item mc_createJSONDictionary]];
+				}
+				value = [array copy];
 			}
 			else {
 				NSValueTransformer *transformer = nil;
@@ -197,7 +233,7 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 				else if ([propertyClass isSubclassOfClass:[NSDate class]]) {
 					transformer = [NSValueTransformer valueTransformerForName:MCJSONDateTimeTransformerName];
 				}
-                
+
 				if (transformer) {
 					value = [transformer reverseTransformedValue:value];
 				}
@@ -251,14 +287,22 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 
 #pragma mark - Convenience Methods
 
-+ (NSDictionary *)mc_inboundMapping {
-	static NSDictionary *mapping = nil;
-	if (!mapping) {
-        NSString *className = NSStringFromClass(self);
-        className = [className stringByReplacingOccurrencesOfString:@"RLMAccessor_" withString:@""];
-        className = [className stringByReplacingOccurrencesOfString:@"RLMStandalone_" withString:@""];
-        Class objectClass = NSClassFromString(className);
++ (Class)mc_normalizedClass {
+	NSString *className = NSStringFromClass(self);
+	className = [className stringByReplacingOccurrencesOfString:@"RLMAccessor_" withString:@""];
+	className = [className stringByReplacingOccurrencesOfString:@"RLMStandalone_" withString:@""];
+	return NSClassFromString(className);
+}
 
++ (NSDictionary *)mc_inboundMapping {
+	Class objectClass = [self mc_normalizedClass];
+	static NSMutableDictionary *mappingForClassName = nil;
+	if (!mappingForClassName) {
+		mappingForClassName = [NSMutableDictionary dictionary];
+	}
+
+	NSDictionary *mapping = mappingForClassName[[objectClass description]];
+	if (!mapping) {
 		SEL selector = NSSelectorFromString(@"JSONInboundMappingDictionary");
 		if ([objectClass respondsToSelector:selector]) {
 			mapping = MCValueFromInvocation(objectClass, selector);
@@ -266,18 +310,20 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 		else {
 			mapping = [objectClass mc_defaultInboundMapping];
 		}
+		mappingForClassName[[objectClass description]] = mapping;
 	}
 	return mapping;
 }
 
 + (NSDictionary *)mc_outboundMapping {
-	static NSDictionary *mapping = nil;
+	Class objectClass = [self mc_normalizedClass];
+	static NSMutableDictionary *mappingForClassName = nil;
+	if (!mappingForClassName) {
+		mappingForClassName = [NSMutableDictionary dictionary];
+	}
+
+	NSDictionary *mapping = mappingForClassName[[objectClass description]];
 	if (!mapping) {
-        NSString *className = NSStringFromClass(self);
-        className = [className stringByReplacingOccurrencesOfString:@"RLMAccessor_" withString:@""];
-        className = [className stringByReplacingOccurrencesOfString:@"RLMStandalone_" withString:@""];
-        Class objectClass = NSClassFromString(className);
-        
 		SEL selector = NSSelectorFromString(@"JSONOutboundMappingDictionary");
 		if ([objectClass respondsToSelector:selector]) {
 			mapping = MCValueFromInvocation(objectClass, selector);
@@ -285,6 +331,7 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 		else {
 			mapping = [objectClass mc_defaultOutboundMapping];
 		}
+		mappingForClassName[[objectClass description]] = mapping;
 	}
 	return mapping;
 }
@@ -292,11 +339,16 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 + (Class)mc_classForPropertyKey:(NSString *)key {
 	NSString *attributes = MCTypeStringFromPropertyKey(self, key);
 	if ([attributes hasPrefix:@"T@"]) {
+        static NSCharacterSet *set = nil;
+        if (!set) {
+            set = [NSCharacterSet characterSetWithCharactersInString:@"\"<"];
+        }
+        
 		NSString *string;
 		NSScanner *scanner = [NSScanner scannerWithString:attributes];
-		[scanner scanUpToString:@"\"" intoString:NULL];
-		[scanner scanString:@"\"" intoString:NULL];
-		[scanner scanUpToString:@"\"" intoString:&string];
+        scanner.charactersToBeSkipped = set;
+        [scanner scanUpToCharactersFromSet:set intoString:NULL];
+        [scanner scanUpToCharactersFromSet:set intoString:&string];
 		return NSClassFromString(string);
 	}
 	return nil;

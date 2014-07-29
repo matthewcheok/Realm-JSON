@@ -10,7 +10,7 @@
 
 NSString* const MCJSONDateTimeTransformerName = @"MCJSONDateTimeTransformerName";
 NSString* const MCJSONDateOnlyTransformerName = @"MCJSONDateOnlyTransformerName";
-static NSString *const kDateFormatDateTime = @"yyyy-MM-dd'T'HH:mm:ssZZZZZ";
+static NSString *const kDateFormatDateTime = @"yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ";
 static NSString *const kDateFormatDateOnly = @"yyyy-MM-dd";
 
 @interface MCJSONDateTransformer ()
