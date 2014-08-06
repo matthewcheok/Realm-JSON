@@ -29,10 +29,10 @@
 - (IBAction)reloadData {
 	AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
 	[manager GET:@"https://www.nsscreencast.com/api/episodes.json" parameters:nil success: ^(AFHTTPRequestOperation *operation, id responseObject) {
-//	    NSLog(@"JSON: %@", responseObject);
-
 	    NSArray *array = responseObject;
-	    [MCEpisode createInRealm:[RLMRealm defaultRealm] withJSONArray:array];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [MCEpisode createInRealm:[RLMRealm defaultRealm] withJSONArray:array];
+        });
 	} failure: ^(AFHTTPRequestOperation *operation, NSError *error) {
 	    NSLog(@"Error: %@", error);
 	}];
@@ -41,8 +41,6 @@
 - (void)refreshData {
 	self.results = [[MCEpisode allObjectsInRealm:[RLMRealm defaultRealm]] arraySortedByProperty:@"publishedDate" ascending:NO];
 	[self.tableView reloadData];
-    
-    NSLog(@"episode %@", [[self.results firstObject] JSONDictionary]);
 }
 
 #pragma mark - UIViewController
