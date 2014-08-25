@@ -72,6 +72,18 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 	return [self mc_createJSONDictionary];
 }
 
+- (void)performInTransaction:(void (^)())transaction {
+	NSAssert(transaction != nil, @"No transaction block provided");
+    [self.realm transactionWithBlock:transaction];
+}
+
+- (void)removeFromRealm {
+    [self performInTransaction:^{
+        [self.realm deleteObject:self];
+    }];
+}
+
+
 #pragma mark - Private
 
 + (instancetype)mc_createFromJSONDictionary:(NSDictionary *)dictionary {
@@ -394,6 +406,26 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 	}
 
 	return result;
+}
+
+@end
+
+@implementation RLMArray (SWAdditions)
+
+- (NSArray *)NSArray {
+    NSMutableArray *array = [NSMutableArray arrayWithCapacity:self.count];
+    for (id object in self) {
+        [array addObject:object];
+    }
+    return [array copy];
+}
+
+- (NSArray *)JSONArray {
+    NSMutableArray *array = [NSMutableArray array];
+    for (RLMObject *object in self) {
+        [array addObject:[object JSONDictionary]];
+    }
+    return [array copy];
 }
 
 @end

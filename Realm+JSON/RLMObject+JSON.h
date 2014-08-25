@@ -18,4 +18,14 @@
 - (instancetype)initWithJSONDictionary:(NSDictionary *)dictionary;
 - (NSDictionary *)JSONDictionary;
 
+- (void)performInTransaction:(void (^)())transaction;
+- (void)removeFromRealm;
+
+@end
+
+@interface RLMArray (SWAdditions)
+
+- (NSArray *)NSArray;
+- (NSArray *)JSONArray;
+
 @end
