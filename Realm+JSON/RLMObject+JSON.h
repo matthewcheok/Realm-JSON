@@ -14,9 +14,13 @@
 
 + (NSArray *)createInRealm:(RLMRealm *)realm withJSONArray:(NSArray *)array;
 + (instancetype)createInRealm:(RLMRealm *)realm withJSONDictionary:(NSDictionary *)dictionary;
++ (instancetype)objectInRealm:(RLMRealm *)realm withPrimaryKeyValue:(id)primaryKeyValue;
 
 - (instancetype)initWithJSONDictionary:(NSDictionary *)dictionary;
 - (NSDictionary *)JSONDictionary;
+
+- (id)primaryKeyValue;
++ (id)primaryKeyValueFromJSONDictionary:(NSDictionary *)dictionary;
 
 - (void)performInTransaction:(void (^)())transaction;
 - (void)removeFromRealm;
