@@ -10,7 +10,7 @@
 
 NSString* const MCJSONDateTimeTransformerName = @"MCJSONDateTimeTransformerName";
 NSString* const MCJSONDateOnlyTransformerName = @"MCJSONDateOnlyTransformerName";
-static NSString *const kDateFormatDateTime = @"yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ";
+static NSString *const kDateFormatDateTime = @"yyyy-MM-dd'T'HH:mm:ssZZZZZ";
 static NSString *const kDateFormatDateOnly = @"yyyy-MM-dd";
 
 @interface MCJSONDateTransformer ()
@@ -35,7 +35,7 @@ static NSString *const kDateFormatDateOnly = @"yyyy-MM-dd";
 	if (self) {
 		self.formatter = [[NSDateFormatter alloc] init];
         self.formatter.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
-        
+
 		switch (style) {
 			case MCJSONDateTransformerStyleDateOnly:
 				self.formatter.dateFormat = kDateFormatDateOnly;
