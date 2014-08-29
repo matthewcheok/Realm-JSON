@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name     = 'Realm+JSON'
-  s.version  = '0.1.3'
+  s.version  = '0.1.4'
   s.ios.deployment_target   = '6.0'
   s.license  = { :type => 'MIT', :file => 'LICENSE' }
   s.summary  = 'A concise Mantle-like way of working with Realm and JSON.'
@@ -15,8 +15,5 @@ Pod::Spec.new do |s|
   s.source_files = 'Realm+JSON/*.{h,m}'
   s.public_header_files = 'Realm+JSON/*.h'
 
-  s.dependency 'Realm', '0.83.0'
-  s.xcconfig = {
-    'FRAMEWORK_SEARCH_PATHS' => '$(PODS_ROOT)/Realm/realm-cocoapods-0.83.0/ios'
-  }
+  s.dependency 'Realm', '~> 0.84.0'
 end

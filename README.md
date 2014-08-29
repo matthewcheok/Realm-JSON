@@ -96,6 +96,24 @@ As you can do with Mantle, you can specify `NSValueTransformers` for your proper
           }];
     }
 
+## Working with background threads
+
+Realm requires that you use different `RLMRealm` objects when working across different threads. This means you shouldn't access the same `RLMObject` instances from different threads. To make this easier to work with, use `- primaryKeyValue` to retrieve the wrapped primary key value from the key instance and query for it later using `+ objectInRealm:withPrimaryKeyValue:`.
+
+    id primaryKeyValue = [episode primaryKeyValue];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        MCEpisode *episode = [MCEpisode objectInRealm:[RLMRealm defaultRealm] withPrimaryKeyValue:primaryKeyValue];
+
+        // do something with episode here
+    });
+
+
+## Working with (temporary) copies
+
+If you need to display UI that may or may not change an object's value, it is sometimes useful to work with an object not bound to a realm as a backing model object. When it is time to commit changes, the properties can be copied back to the stored model.
+
+`RLMObject+Copying.h` provides these methods `- shallowCopy` and `- mergePropertiesFromObject:`. The later of which needs to be performed in a realm transaction.
+
 ## License
 
 Realm+JSON is under the MIT license.
