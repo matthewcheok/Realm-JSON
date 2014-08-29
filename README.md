@@ -98,7 +98,7 @@ As you can do with Mantle, you can specify `NSValueTransformers` for your proper
 
 ## Working with background threads
 
-Realm requires that you use different `RLMRealm` objects when working across different threads. This means you shouldn't access the same `RLMObject` instances from different threads. To make this easier to work with, use `- primaryKeyValue` to retrieve the wrapped primary key value from the key instance and query for it later using `+ objectInRealm:withPrimaryKeyValue:`.
+Realm requires that you use different `RLMRealm` objects when working across different threads. This means you shouldn't access the same `RLMObject` instances from different threads. To make this easier to work with, use `- primaryKeyValue` to retrieve the wrapped primary key value from an instance and query for it later using `+ objectInRealm:withPrimaryKeyValue:`.
 
     id primaryKeyValue = [episode primaryKeyValue];
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -108,11 +108,23 @@ Realm requires that you use different `RLMRealm` objects when working across dif
     });
 
 
-## Working with (temporary) copies
+## Working with (temporary) copies (RLMObject+Copying)
 
-If you need to display UI that may or may not change an object's value, it is sometimes useful to work with an object not bound to a realm as a backing model object. When it is time to commit changes, the properties can be copied back to the stored model.
+If you need to display UI that may or may not change an object's properties, it is sometimes useful to work with an object not bound to a realm as a backing model object. When it is time to commit changes, the properties can be copied back to the stored model.
 
-`RLMObject+Copying.h` provides these methods `- shallowCopy` and `- mergePropertiesFromObject:`. The later of which needs to be performed in a realm transaction.
+Methods `- shallowCopy` and `- mergePropertiesFromObject:` are provided. The later of which needs to be performed in a realm transaction.
+
+    #import <Realm+Copying.h>
+
+    MCEpisode *anotherEpisode = [episode shallowCopy];
+    anotherEpisode.title = @"New title";
+
+    // ...
+
+    [episode performInTransaction:^{
+        [episode mergePropertiesFromObject:anotherEpisode];
+    }];
+
 
 ## License
 
