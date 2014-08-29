@@ -15,8 +15,5 @@ Pod::Spec.new do |s|
   s.source_files = 'Realm+JSON/*.{h,m}'
   s.public_header_files = 'Realm+JSON/*.h'
 
-  s.dependency 'Realm', '0.83.0'
-  s.xcconfig = {
-    'FRAMEWORK_SEARCH_PATHS' => '$(PODS_ROOT)/Realm/realm-cocoapods-0.83.0/ios'
-  }
+  s.dependency 'Realm', '~> 0.84.0'
 end
