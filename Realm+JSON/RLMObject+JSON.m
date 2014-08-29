@@ -248,7 +248,7 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 	}
 }
 
-- (NSDictionary *)mc_createJSONDictionary {
+- (id)mc_createJSONDictionary {
 	NSMutableDictionary *result = [NSMutableDictionary dictionary];
 	NSDictionary *mapping = [[self class] mc_outboundMapping];
 
@@ -277,6 +277,10 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 					value = [transformer reverseTransformedValue:value];
 				}
 			}
+            
+            if ([dictionaryKeyPath isEqualToString:@"self"]) {
+                return value;
+            }
 
 			NSArray *keyPathComponents = [dictionaryKeyPath componentsSeparatedByString:@"."];
 			id currentDictionary = result;
