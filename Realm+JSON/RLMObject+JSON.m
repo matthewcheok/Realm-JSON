@@ -45,7 +45,9 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 	[realm beginWriteTransaction];
 	for (NSDictionary *dictionary in array) {
 		id object = [self mc_createOrUpdateInRealm:realm withJSONDictionary:dictionary];
-        [result addObject:object];
+        if (object) {
+            [result addObject:object];
+        }
 	}
 	[realm commitWriteTransaction];
     
@@ -157,7 +159,7 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 		return nil;
 	}
 
-    id object = nil;
+    id object;
     id primaryKeyValue = [self primaryKeyValueFromJSONDictionary:dictionary];
 
 	if (primaryKeyValue) {
@@ -166,14 +168,15 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
     
     if (object) {
         [object mc_setValuesFromJSONDictionary:dictionary inRealm:realm];
-    }
-	else {
+    } else {
+        // only return objects created
 		object = [[self alloc] init];
 		[object mc_setValuesFromJSONDictionary:dictionary inRealm:realm];
 		[realm addObject:object];
+        return object;
 	}
 
-	return object;
+	return nil;
 }
 
 - (void)mc_setValuesFromJSONDictionary:(NSDictionary *)dictionary inRealm:(RLMRealm *)realm {
