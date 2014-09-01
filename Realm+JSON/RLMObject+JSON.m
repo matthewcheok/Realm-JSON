@@ -23,9 +23,9 @@ static id MCValueFromInvocation(id object, SEL selector) {
 
 static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 	const objc_property_t property = class_getProperty(class, [key UTF8String]);
-    if (!property) {
-        [NSException raise:NSInternalInconsistencyException format:@"Class %@ does not have property %@", class, key];
-    }
+	if (!property) {
+		[NSException raise:NSInternalInconsistencyException format:@"Class %@ does not have property %@", class, key];
+	}
 	const char *type = property_getAttributes(property);
 	return [NSString stringWithUTF8String:type];
 }
@@ -40,16 +40,31 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 @implementation RLMObject (JSON)
 
 + (NSArray *)createInRealm:(RLMRealm *)realm withJSONArray:(NSArray *)array {
-    NSMutableArray *result = [NSMutableArray array];
-    
+	return [self createInRealm:realm withJSONArray:array returnNewObjectsOnly:NO];
+}
+
++ (NSArray *)createInRealm:(RLMRealm *)realm withJSONArray:(NSArray *)array returnNewObjectsOnly:(BOOL)newOnly {
+	NSMutableArray *result = [NSMutableArray array];
+
 	[realm beginWriteTransaction];
 	for (NSDictionary *dictionary in array) {
-		id object = [self mc_createOrUpdateInRealm:realm withJSONDictionary:dictionary];
-        [result addObject:object];
+		if (newOnly) {
+			id primaryKeyValue = [self primaryKeyValueFromJSONDictionary:dictionary];
+			BOOL exists = primaryKeyValue && [self objectInRealm:realm withPrimaryKeyValue:primaryKeyValue] != nil;
+
+			id object = [self mc_createOrUpdateInRealm:realm withJSONDictionary:dictionary];
+			if (!exists) {
+				[result addObject:object];
+			}
+		}
+		else {
+			id object = [self mc_createOrUpdateInRealm:realm withJSONDictionary:dictionary];
+			[result addObject:object];
+		}
 	}
 	[realm commitWriteTransaction];
-    
-    return [result copy];
+
+	return [result copy];
 }
 
 + (instancetype)createInRealm:(RLMRealm *)realm withJSONDictionary:(NSDictionary *)dictionary {
@@ -61,25 +76,25 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 }
 
 + (instancetype)objectInRealm:(RLMRealm *)realm withPrimaryKeyValue:(id)primaryKeyValue {
-    NSString *primaryKey = nil;
-    id value = primaryKeyValue;
-    
-    SEL selector = NSSelectorFromString(@"primaryKey");
+	NSString *primaryKey = nil;
+	id value = primaryKeyValue;
+
+	SEL selector = NSSelectorFromString(@"primaryKey");
 	if ([self respondsToSelector:selector]) {
 		primaryKey = MCValueFromInvocation(self, selector);
 	}
-    
-    NSAssert(primaryKey, @"No primary key on class %@", [self description]);
-    
-    NSString *primaryPredicate = [NSString stringWithFormat:@"%@ = %%@", primaryKey];
-    RLMArray *array = [self objectsInRealm:realm where:primaryPredicate, value];
-    
-    if (array.count > 0) {
-        return array.firstObject;
-    }
-    else {
-        return nil;
-    }
+
+	NSAssert(primaryKey, @"No primary key on class %@", [self description]);
+
+	NSString *primaryPredicate = [NSString stringWithFormat:@"%@ = %%@", primaryKey];
+	RLMArray *array = [self objectsInRealm:realm where:primaryPredicate, value];
+
+	if (array.count > 0) {
+		return array.firstObject;
+	}
+	else {
+		return nil;
+	}
 }
 
 - (instancetype)initWithJSONDictionary:(NSDictionary *)dictionary {
@@ -95,55 +110,54 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 }
 
 - (id)primaryKeyValue {
-    NSString *primaryKey = [[self class] mc_primaryKey];
-    NSAssert(primaryKey, @"No primary key on class %@", [self description]);
+	NSString *primaryKey = [[self class] mc_primaryKey];
+	NSAssert(primaryKey, @"No primary key on class %@", [self description]);
 
-    return [self valueForKeyPath:primaryKey];
+	return [self valueForKeyPath:primaryKey];
 }
 
 + (id)primaryKeyValueFromJSONDictionary:(NSDictionary *)dictionary {
-    NSString *primaryKey = [[self class] mc_primaryKey];
-    NSAssert(primaryKey, @"No primary key on class %@", [self description]);
-    
-    NSDictionary *inboundMapping = [self mc_inboundMapping];
-    NSString *primaryKeyPath = [[inboundMapping allKeysForObject:primaryKey] firstObject];
-    id primaryKeyValue = [dictionary valueForKeyPath:primaryKeyPath];
-    
-    NSValueTransformer *transformer = [self mc_transformerForPropertyKey:primaryKey];
-    if (primaryKeyValue && transformer) {
-        primaryKeyValue = [transformer transformedValue:primaryKeyValue];
-    }
+	NSString *primaryKey = [[self class] mc_primaryKey];
+	NSAssert(primaryKey, @"No primary key on class %@", [self description]);
 
-    return primaryKeyValue;
+	NSDictionary *inboundMapping = [self mc_inboundMapping];
+	NSString *primaryKeyPath = [[inboundMapping allKeysForObject:primaryKey] firstObject];
+	id primaryKeyValue = [dictionary valueForKeyPath:primaryKeyPath];
+
+	NSValueTransformer *transformer = [self mc_transformerForPropertyKey:primaryKey];
+	if (primaryKeyValue && transformer) {
+		primaryKeyValue = [transformer transformedValue:primaryKeyValue];
+	}
+
+	return primaryKeyValue;
 }
 
 - (void)performInTransaction:(void (^)())transaction {
 	NSAssert(transaction != nil, @"No transaction block provided");
-    if (self.realm) {
-        [self.realm transactionWithBlock:transaction];
-    }
-    else {
-        transaction();
-    }
+	if (self.realm) {
+		[self.realm transactionWithBlock:transaction];
+	}
+	else {
+		transaction();
+	}
 }
 
 - (void)removeFromRealm {
-    [self performInTransaction:^{
-        [self.realm deleteObject:self];
-    }];
+	[self performInTransaction: ^{
+	    [self.realm deleteObject:self];
+	}];
 }
-
 
 #pragma mark - Private
 
 + (NSString *)mc_primaryKey {
-    NSString *primaryKey = nil;
-    SEL selector = NSSelectorFromString(@"primaryKey");
+	NSString *primaryKey = nil;
+	SEL selector = NSSelectorFromString(@"primaryKey");
 	if ([self respondsToSelector:selector]) {
 		primaryKey = MCValueFromInvocation(self, selector);
 	}
-    
-    return primaryKey;
+
+	return primaryKey;
 }
 
 + (instancetype)mc_createFromJSONDictionary:(NSDictionary *)dictionary {
@@ -157,16 +171,16 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 		return nil;
 	}
 
-    id object = nil;
-    id primaryKeyValue = [self primaryKeyValueFromJSONDictionary:dictionary];
+	id object = nil;
+	id primaryKeyValue = [self primaryKeyValueFromJSONDictionary:dictionary];
 
 	if (primaryKeyValue) {
-        object = [self objectInRealm:realm withPrimaryKeyValue:primaryKeyValue];
+		object = [self objectInRealm:realm withPrimaryKeyValue:primaryKeyValue];
 	}
-    
-    if (object) {
-        [object mc_setValuesFromJSONDictionary:dictionary inRealm:realm];
-    }
+
+	if (object) {
+		[object mc_setValuesFromJSONDictionary:dictionary inRealm:realm];
+	}
 	else {
 		object = [[self alloc] init];
 		[object mc_setValuesFromJSONDictionary:dictionary inRealm:realm];
@@ -219,19 +233,19 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 			}
 			else {
 				NSValueTransformer *transformer = [[self class] mc_transformerForPropertyKey:objectKeyPath];
-                
+
 				if (transformer) {
-                    if ([value isEqual:[NSNull null]]) {
-                        value = nil;
-                    }
+					if ([value isEqual:[NSNull null]]) {
+						value = nil;
+					}
 					value = [transformer transformedValue:value];
-                    if (!value) {
-                        value = [NSNull null];
-                    }
+					if (!value) {
+						value = [NSNull null];
+					}
 				}
 
 				if ([value isEqual:[NSNull null]]) {
-                    if ([propertyClass isSubclassOfClass:[NSDate class]]) {
+					if ([propertyClass isSubclassOfClass:[NSDate class]]) {
 						value = [NSDate distantPast];
 					}
 					else if ([propertyClass isSubclassOfClass:[NSString class]]) {
@@ -277,10 +291,10 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 					value = [transformer reverseTransformedValue:value];
 				}
 			}
-            
-            if ([dictionaryKeyPath isEqualToString:@"self"]) {
-                return value;
-            }
+
+			if ([dictionaryKeyPath isEqualToString:@"self"]) {
+				return value;
+			}
 
 			NSArray *keyPathComponents = [dictionaryKeyPath componentsSeparatedByString:@"."];
 			id currentDictionary = result;
@@ -382,35 +396,35 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 + (Class)mc_classForPropertyKey:(NSString *)key {
 	NSString *attributes = MCTypeStringFromPropertyKey(self, key);
 	if ([attributes hasPrefix:@"T@"]) {
-        static NSCharacterSet *set = nil;
-        if (!set) {
-            set = [NSCharacterSet characterSetWithCharactersInString:@"\"<"];
-        }
-        
+		static NSCharacterSet *set = nil;
+		if (!set) {
+			set = [NSCharacterSet characterSetWithCharactersInString:@"\"<"];
+		}
+
 		NSString *string;
 		NSScanner *scanner = [NSScanner scannerWithString:attributes];
-        scanner.charactersToBeSkipped = set;
-        [scanner scanUpToCharactersFromSet:set intoString:NULL];
-        [scanner scanUpToCharactersFromSet:set intoString:&string];
+		scanner.charactersToBeSkipped = set;
+		[scanner scanUpToCharactersFromSet:set intoString:NULL];
+		[scanner scanUpToCharactersFromSet:set intoString:&string];
 		return NSClassFromString(string);
 	}
 	return nil;
 }
 
 + (NSValueTransformer *)mc_transformerForPropertyKey:(NSString *)key {
-    Class modelClass = [[self class] mc_normalizedClass];
-    Class propertyClass = [modelClass mc_classForPropertyKey:key];
-    SEL selector = NSSelectorFromString([key stringByAppendingString:@"JSONTransformer"]);
-    
-    NSValueTransformer *transformer = nil;
-    if ([self respondsToSelector:selector]) {
-        transformer = MCValueFromInvocation(self, selector);
-    }
-    else if ([propertyClass isSubclassOfClass:[NSDate class]]) {
-        transformer = [NSValueTransformer valueTransformerForName:MCJSONDateTimeTransformerName];
-    }
-    
-    return transformer;
+	Class modelClass = [[self class] mc_normalizedClass];
+	Class propertyClass = [modelClass mc_classForPropertyKey:key];
+	SEL selector = NSSelectorFromString([key stringByAppendingString:@"JSONTransformer"]);
+
+	NSValueTransformer *transformer = nil;
+	if ([self respondsToSelector:selector]) {
+		transformer = MCValueFromInvocation(self, selector);
+	}
+	else if ([propertyClass isSubclassOfClass:[NSDate class]]) {
+		transformer = [NSValueTransformer valueTransformerForName:MCJSONDateTimeTransformerName];
+	}
+
+	return transformer;
 }
 
 @end
@@ -460,19 +474,19 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 @implementation RLMArray (SWAdditions)
 
 - (NSArray *)NSArray {
-    NSMutableArray *array = [NSMutableArray arrayWithCapacity:self.count];
-    for (id object in self) {
-        [array addObject:object];
-    }
-    return [array copy];
+	NSMutableArray *array = [NSMutableArray arrayWithCapacity:self.count];
+	for (id object in self) {
+		[array addObject:object];
+	}
+	return [array copy];
 }
 
 - (NSArray *)JSONArray {
-    NSMutableArray *array = [NSMutableArray array];
-    for (RLMObject *object in self) {
-        [array addObject:[object JSONDictionary]];
-    }
-    return [array copy];
+	NSMutableArray *array = [NSMutableArray array];
+	for (RLMObject *object in self) {
+		[array addObject:[object JSONDictionary]];
+	}
+	return [array copy];
 }
 
 @end
