@@ -13,6 +13,8 @@
 @interface RLMObject (JSON)
 
 + (NSArray *)createInRealm:(RLMRealm *)realm withJSONArray:(NSArray *)array;
++ (NSArray *)createInRealm:(RLMRealm *)realm withJSONArray:(NSArray *)array returnNewObjectsOnly:(BOOL)newOnly;
+
 + (instancetype)createInRealm:(RLMRealm *)realm withJSONDictionary:(NSDictionary *)dictionary;
 + (instancetype)objectInRealm:(RLMRealm *)realm withPrimaryKeyValue:(id)primaryKeyValue;
 
