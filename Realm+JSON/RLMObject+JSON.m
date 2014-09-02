@@ -118,7 +118,9 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 
 + (id)primaryKeyValueFromJSONDictionary:(NSDictionary *)dictionary {
 	NSString *primaryKey = [[self class] mc_primaryKey];
-	NSAssert(primaryKey, @"No primary key on class %@", [self description]);
+    if (!primaryKey) {
+        return nil;
+    }
 
 	NSDictionary *inboundMapping = [self mc_inboundMapping];
 	NSString *primaryKeyPath = [[inboundMapping allKeysForObject:primaryKey] firstObject];
