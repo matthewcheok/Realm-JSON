@@ -1,6 +1,6 @@
 //
 //  RLMObject+Copying.h
-//  Saleswhale
+//  RealmJSONDemo
 //
 //  Created by Matthew Cheok on 26/8/14.
 //  Copyright (c) 2014 Getting Real. All rights reserved.

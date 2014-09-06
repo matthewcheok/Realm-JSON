@@ -1,12 +1,13 @@
 //
 //  RLMObject+Copying.m
-//  Saleswhale
+//  RealmJSONDemo
 //
 //  Created by Matthew Cheok on 26/8/14.
 //  Copyright (c) 2014 Getting Real. All rights reserved.
 //
 
 #import "RLMObject+Copying.h"
+#import "RLMObject+MCInternal.h"
 
 @implementation RLMObject (Copying)
 
@@ -32,15 +33,6 @@
             [self setValue:value forKeyPath:property.name];
         }
     }
-}
-
-#pragma mark - Private
-
-+ (Class)mc_normalizedClass {
-	NSString *className = NSStringFromClass(self);
-	className = [className stringByReplacingOccurrencesOfString:@"RLMAccessor_" withString:@""];
-	className = [className stringByReplacingOccurrencesOfString:@"RLMStandalone_" withString:@""];
-	return NSClassFromString(className);
 }
 
 @end

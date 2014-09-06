@@ -7,6 +7,8 @@
 //
 
 #import "RLMObject+JSON.h"
+#import "RLMObject+MCInternal.h"
+
 #import <objc/runtime.h>
 
 static id MCValueFromInvocation(id object, SEL selector) {
@@ -345,13 +347,6 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 }
 
 #pragma mark - Convenience Methods
-
-+ (Class)mc_normalizedClass {
-	NSString *className = NSStringFromClass(self);
-	className = [className stringByReplacingOccurrencesOfString:@"RLMAccessor_" withString:@""];
-	className = [className stringByReplacingOccurrencesOfString:@"RLMStandalone_" withString:@""];
-	return NSClassFromString(className);
-}
 
 + (NSDictionary *)mc_inboundMapping {
 	Class objectClass = [self mc_normalizedClass];
