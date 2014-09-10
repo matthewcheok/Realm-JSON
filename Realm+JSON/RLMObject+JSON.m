@@ -100,7 +100,7 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 }
 
 - (instancetype)initWithJSONDictionary:(NSDictionary *)dictionary {
-	self = [super init];
+	self = [self init];
 	if (self) {
 		[self mc_setValuesFromJSONDictionary:dictionary inRealm:nil];
 	}
