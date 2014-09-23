@@ -31,7 +31,12 @@
 	[manager GET:@"https://www.nsscreencast.com/api/episodes.json" parameters:nil success: ^(AFHTTPRequestOperation *operation, id responseObject) {
 	    NSArray *array = responseObject;
         dispatch_async(dispatch_get_main_queue(), ^{
-            NSArray *result = [MCEpisode createInRealm:[RLMRealm defaultRealm] withJSONArray:array returnNewObjectsOnly:YES];
+            RLMRealm *realm = [RLMRealm defaultRealm];
+            
+            [realm beginWriteTransaction];
+            NSArray *result = [MCEpisode createOrUpdateInRealm:realm withJSONArray:array];
+            [realm commitWriteTransaction];
+            
             NSLog(@"result: %@", result);
         });
 	} failure: ^(AFHTTPRequestOperation *operation, NSError *error) {

@@ -7,12 +7,12 @@
 //
 
 #import "RLMObject+Copying.h"
-#import "RLMObject+MCInternal.h"
 
 @implementation RLMObject (Copying)
 
 - (instancetype)shallowCopy {
-    Class class = [self.class mc_normalizedClass];
+    Class class = NSClassFromString([[self class] className]);
+
     id object = [[class alloc] init];
     [object mergePropertiesFromObject:self];
     
