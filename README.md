@@ -8,8 +8,9 @@ A concise [Mantle](https://github.com/Mantle/Mantle)-like way of working with [R
 
 ## Breaking Change
 
-- Updated to use native primary key support in Realm 0.85.0.
-- Update to use methods `-createOrUpdateInRealm:withJSONArray:` or `-createOrUpdateInRealm:withJSONDictionary:`.
+- Updated to use native primary key support in Realm 0.85.0
+- Update your code to use methods `-createOrUpdateInRealm:withJSONArray:` or `-createOrUpdateInRealm:withJSONDictionary:`
+- You must wrap these methods in a write transaction (between `[realm beginWriteTransaction];` and `[realm commitWriteTransaction];`)
 - These methods call `-createOrUpdateInRealm:withObject:` behind the scenes for performance.
 
 ## Installation
