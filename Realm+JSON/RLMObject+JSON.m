@@ -120,9 +120,9 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 
 + (id)primaryKeyValueFromJSONDictionary:(NSDictionary *)dictionary {
 	NSString *primaryKey = [[self class] mc_primaryKey];
-    if (!primaryKey) {
-        return nil;
-    }
+	if (!primaryKey) {
+		return nil;
+	}
 
 	NSDictionary *inboundMapping = [self mc_inboundMapping];
 	NSString *primaryKeyPath = [[inboundMapping allKeysForObject:primaryKey] firstObject];
@@ -148,7 +148,7 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 
 - (void)removeFromRealm {
 	[self performInTransaction: ^{
-	    [self.realm deleteObject:self];
+		[self.realm deleteObject:self];
 	}];
 }
 
@@ -183,7 +183,7 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 	}
 
 	if (object) {
-		[object mc_setValuesFromJSONDictionary:dictionary inRealm:realm];
+		[object mc_setValuesFromJSONDictionary:dictionary inRealm:realm forPrimaryKey:[[self class] mc_primaryKey]];
 	}
 	else {
 		object = [[self alloc] init];
@@ -195,6 +195,11 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 }
 
 - (void)mc_setValuesFromJSONDictionary:(NSDictionary *)dictionary inRealm:(RLMRealm *)realm {
+	[self mc_setValuesFromJSONDictionary:dictionary inRealm:realm forPrimaryKey:nil];
+}
+
+- (void)mc_setValuesFromJSONDictionary:(NSDictionary *)dictionary inRealm:(RLMRealm *)realm forPrimaryKey:(id)primaryKey {
+
 	NSDictionary *mapping = [[self class] mc_inboundMapping];
 
 	for (NSString *dictionaryKeyPath in mapping) {
@@ -261,7 +266,9 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 				}
 			}
 
-			[self setValue:value forKeyPath:objectKeyPath];
+			if (objectKeyPath != primaryKey) {
+				[self setValue:value forKeyPath:objectKeyPath];
+			}
 		}
 	}
 }
