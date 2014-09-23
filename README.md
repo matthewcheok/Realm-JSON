@@ -6,11 +6,17 @@ Realm+JSON ![License MIT](https://go-shields.herokuapp.com/license-MIT-blue.png)
 
 A concise [Mantle](https://github.com/Mantle/Mantle)-like way of working with [Realm](https://github.com/realm/realm-cocoa) and JSON.
 
+## Breaking Change
+
+- Updated to use native primary key support in Realm 0.85.0.
+- Update to use methods `-createOrUpdateInRealm:withJSONArray:` or `-createOrUpdateInRealm:withJSONDictionary:`.
+- These methods call `-createOrUpdateInRealm:withObject:` behind the scenes for performance.
+
 ## Installation
 
 Add the following to your [CocoaPods](http://cocoapods.org/) Podfile
 
-    pod 'Realm+JSON', '~> 0.1'
+    pod 'Realm+JSON', '~> 0.2'
 
 or clone as a git submodule,
 
@@ -43,13 +49,11 @@ Simply declare your model as normal:
 
 Then pass the result of `NSJSONSerialization` or `AFNetworking` as follows:
 
-      [MCEpisode createInRealm:[RLMRealm defaultRealm] withJSONArray:array];
+      [MCEpisode createOrUpdateInRealm:[RLMRealm defaultRealm] withJSONArray:array];
 
 or
 
-      [MCEpisode createInRealm:[RLMRealm defaultRealm] withJSONDictionary:dictionary];
-
-When you specify a `primaryKey` (see below), objects in the realm with same primary key value will be replaced instead of a duplicate version of the object added.
+      [MCEpisode createOrUpdateInRealm:[RLMRealm defaultRealm] withJSONDictionary:dictionary];
 
 Use the `-JSONDictionary` method to get a JSON-ready dictionary for your network requests.
 
@@ -80,12 +84,6 @@ You should specify the inbound and outbound JSON mapping on your `RLMObject` sub
     }
 
 Leaving out either one of the above will result in a mapping that assumes camelCase for your properties which map to snake_case for the JSON equivalents.
-
-Specify the primary key property like this:
-
-    + (NSString *)primaryKey {
-      return @"episodeID";
-    }
 
 As you can do with Mantle, you can specify `NSValueTransformers` for your properties:
 
