@@ -74,7 +74,7 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 	NSAssert(primaryKey, @"No primary key on class %@", [self description]);
 
 	NSString *primaryPredicate = [NSString stringWithFormat:@"%@ = %%@", primaryKey];
-	RLMArray *array = [self objectsInRealm:realm where:primaryPredicate, value];
+	RLMResults *array = [self objectsInRealm:realm where:primaryPredicate, value];
 
 	if (array.count > 0) {
 		return array.firstObject;
