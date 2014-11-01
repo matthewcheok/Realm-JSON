@@ -25,7 +25,7 @@
         if (property.type == RLMPropertyTypeArray) {
             RLMArray *thisArray = [self valueForKeyPath:property.name];
             RLMArray *thatArray = [object valueForKeyPath:property.name];
-            [thisArray addObjectsFromArray:thatArray];
+            [thisArray addObjects:thatArray];
         }
         // assume data
         else {
