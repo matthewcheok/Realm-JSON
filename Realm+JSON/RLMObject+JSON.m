@@ -74,10 +74,10 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 	NSAssert(primaryKey, @"No primary key on class %@", [self description]);
 
 	NSString *primaryPredicate = [NSString stringWithFormat:@"%@ = %%@", primaryKey];
-	RLMArray *array = [self objectsInRealm:realm where:primaryPredicate, value];
+	RLMResults *results = [self objectsInRealm:realm where:primaryPredicate, value];
 
-	if (array.count > 0) {
-		return array.firstObject;
+	if (results.count > 0) {
+		return results.firstObject;
 	}
 	else {
 		return nil;
@@ -275,43 +275,41 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 #pragma mark - Convenience Methods
 
 + (NSDictionary *)mc_inboundMapping {
-	Class objectClass = NSClassFromString([self className]);
 	static NSMutableDictionary *mappingForClassName = nil;
 	if (!mappingForClassName) {
 		mappingForClassName = [NSMutableDictionary dictionary];
 	}
 
-	NSDictionary *mapping = mappingForClassName[[objectClass description]];
+	NSDictionary *mapping = mappingForClassName[[self className]];
 	if (!mapping) {
 		SEL selector = NSSelectorFromString(@"JSONInboundMappingDictionary");
-		if ([objectClass respondsToSelector:selector]) {
-			mapping = MCValueFromInvocation(objectClass, selector);
+		if ([self respondsToSelector:selector]) {
+			mapping = MCValueFromInvocation(self, selector);
 		}
 		else {
-			mapping = [objectClass mc_defaultInboundMapping];
+			mapping = [self mc_defaultInboundMapping];
 		}
-		mappingForClassName[[objectClass description]] = mapping;
+		mappingForClassName[[self className]] = mapping;
 	}
 	return mapping;
 }
 
 + (NSDictionary *)mc_outboundMapping {
-	Class objectClass = NSClassFromString([self className]);
 	static NSMutableDictionary *mappingForClassName = nil;
 	if (!mappingForClassName) {
 		mappingForClassName = [NSMutableDictionary dictionary];
 	}
 
-	NSDictionary *mapping = mappingForClassName[[objectClass description]];
+	NSDictionary *mapping = mappingForClassName[[self className]];
 	if (!mapping) {
 		SEL selector = NSSelectorFromString(@"JSONOutboundMappingDictionary");
-		if ([objectClass respondsToSelector:selector]) {
-			mapping = MCValueFromInvocation(objectClass, selector);
+		if ([self respondsToSelector:selector]) {
+			mapping = MCValueFromInvocation(self, selector);
 		}
 		else {
-			mapping = [objectClass mc_defaultOutboundMapping];
+			mapping = [self mc_defaultOutboundMapping];
 		}
-		mappingForClassName[[objectClass description]] = mapping;
+		mappingForClassName[[self className]] = mapping;
 	}
 	return mapping;
 }
@@ -345,8 +343,7 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 }
 
 + (NSValueTransformer *)mc_transformerForPropertyKey:(NSString *)key {
-	Class modelClass = NSClassFromString([self className]);
-	Class propertyClass = [modelClass mc_classForPropertyKey:key];
+	Class propertyClass = [self mc_classForPropertyKey:key];
 	SEL selector = NSSelectorFromString([key stringByAppendingString:@"JSONTransformer"]);
 
 	NSValueTransformer *transformer = nil;

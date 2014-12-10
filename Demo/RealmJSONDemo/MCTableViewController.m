@@ -17,7 +17,7 @@
 
 @interface MCTableViewController ()
 
-@property (nonatomic, strong) RLMArray *results;
+@property (nonatomic, strong) RLMResults *results;
 @property (nonatomic, strong) RLMNotificationToken *token;
 
 @end
@@ -45,7 +45,7 @@
 }
 
 - (void)refreshData {
-	self.results = [[MCEpisode allObjectsInRealm:[RLMRealm defaultRealm]] arraySortedByProperty:@"publishedDate" ascending:NO];
+	self.results = [[MCEpisode allObjectsInRealm:[RLMRealm defaultRealm]] sortedResultsUsingProperty:@"publishedDate" ascending:NO];
 	[self.tableView reloadData];
 }
 

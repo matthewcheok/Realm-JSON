@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name     = 'Realm+JSON'
-  s.version  = '0.2.1'
+  s.version  = '0.2.3'
   s.ios.deployment_target   = '7.0'
   s.license  = { :type => 'MIT', :file => 'LICENSE' }
   s.summary  = 'A concise Mantle-like way of working with Realm and JSON.'
@@ -15,5 +15,5 @@ Pod::Spec.new do |s|
   s.source_files = 'Realm+JSON/*.{h,m}'
   s.public_header_files = 'Realm+JSON/*.h'
 
-  s.dependency 'Realm', '~> 0.86.0'
+  s.dependency 'Realm', '~> 0.88.0'
 end
