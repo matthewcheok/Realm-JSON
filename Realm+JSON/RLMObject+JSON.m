@@ -156,7 +156,15 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 					continue;
 				}
 
-				value = [propertyClass mc_createObjectFromJSONDictionary:value];
+                if ([value isKindOfClass:[NSDictionary class]]) {
+                    value = [propertyClass mc_createObjectFromJSONDictionary:value];
+                } else {
+                    NSValueTransformer *transformer = [[self class] mc_transformerForPropertyKey:objectKeyPath];
+                    
+                    if (transformer) {
+                        value = [transformer transformedValue:value];
+                    }
+                }
 			}
 			else if ([propertyClass isSubclassOfClass:[RLMArray class]]) {
                 RLMProperty *property = [self mc_propertyForPropertyKey:objectKeyPath];
