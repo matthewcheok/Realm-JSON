@@ -11,7 +11,7 @@
 @interface RLMObject (Copying)
 
 - (instancetype)shallowCopy;
-- (instancetype)deepShallowCopy;
+- (instancetype)deepCopy;
 - (void)mergePropertiesFromObject:(id)object;
 
 @end
