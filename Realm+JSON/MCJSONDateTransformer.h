@@ -9,10 +9,12 @@
 #import <Foundation/Foundation.h>
 
 extern NSString* const MCJSONDateTimeTransformerName;
+extern NSString* const MCJSONDateTimeMillisecondTransformerName;
 extern NSString* const MCJSONDateOnlyTransformerName;
 
 typedef NS_ENUM(NSInteger, MCJSONDateTransformerStyle) {
     MCJSONDateTransformerStyleDateTime = 0,
+    MCJSONDateTransformerStyleDateTimeMillisecond,
     MCJSONDateTransformerStyleDateOnly
 };
 
