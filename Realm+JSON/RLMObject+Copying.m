@@ -55,7 +55,7 @@
             RLMObject *value = [self valueForKeyPath:property.name];
             [object setValue:[value deepShallowCopy] forKeyPath:property.name];
         }
-        else{
+        else {
             id value = [self valueForKeyPath:property.name];
             [object setValue:value forKeyPath:property.name];
         }
