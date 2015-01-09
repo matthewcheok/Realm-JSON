@@ -41,8 +41,7 @@
     RLMObject *object = [[class alloc] init];
     
     for (RLMProperty *property in self.objectSchema.properties) {
-        // assume array
-        
+
         if (property.type == RLMPropertyTypeArray) {
             RLMArray *thisArray = [self valueForKeyPath:property.name];
             RLMArray *newArray = [object valueForKeyPath:property.name];
