@@ -35,4 +35,35 @@
     }
 }
 
+- (instancetype)deepCopy {
+    Class class = NSClassFromString([[self class] className]);
+    
+    RLMObject *object = [[class alloc] init];
+    
+    for (RLMProperty *property in self.objectSchema.properties) {
+
+        if (property.type == RLMPropertyTypeArray) {
+            RLMArray *thisArray = [self valueForKeyPath:property.name];
+            RLMArray *newArray = [object valueForKeyPath:property.name];
+            
+            for (RLMObject *currentObject in thisArray) {
+                [newArray addObject:[currentObject deepCopy]];
+            }
+            
+        }
+        else if (property.type == RLMPropertyTypeObject) {
+            RLMObject *value = [self valueForKeyPath:property.name];
+            [object setValue:[value deepCopy] forKeyPath:property.name];
+        }
+        else {
+            id value = [self valueForKeyPath:property.name];
+            [object setValue:value forKeyPath:property.name];
+        }
+    }
+    
+    return object;
+}
+
+
+
 @end
