@@ -152,7 +152,7 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 			Class propertyClass = [modelClass mc_classForPropertyKey:objectKeyPath];
 
 			if ([propertyClass isSubclassOfClass:[RLMObject class]]) {
-				if (!value || [value isEqual:[NSNull null]]) {
+				if (!value || [value isEqual:[NSNull null]] || [value count] == 0) {
 					continue;
 				}
 
