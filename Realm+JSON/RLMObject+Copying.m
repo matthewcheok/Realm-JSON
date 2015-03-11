@@ -8,6 +8,9 @@
 
 #import "RLMObject+Copying.h"
 
+#import <Realm/RLMProperty.h>
+#import <Realm/RLMObjectSchema.h>
+
 @implementation RLMObject (Copying)
 
 - (instancetype)shallowCopy {
