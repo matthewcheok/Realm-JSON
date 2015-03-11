@@ -56,12 +56,21 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 
 @implementation RLMObject (JSON)
 
+static NSInteger const kCreateBatchSize = 100;
+
 + (NSArray *)createOrUpdateInRealm:(RLMRealm *)realm withJSONArray:(NSArray *)array {
+    NSInteger count = array.count;
     NSMutableArray *result = [NSMutableArray array];
     
-    for (NSDictionary *dictionary in array) {
-        id object = [self createOrUpdateInRealm:realm withJSONDictionary:dictionary];
-        [result addObject:object];
+    for (NSInteger index=0; index*kCreateBatchSize<count; index++) {
+        NSInteger size = MIN(kCreateBatchSize, count-index*kCreateBatchSize);
+        @autoreleasepool {
+            for (NSInteger subIndex=index*kCreateBatchSize; subIndex<size; subIndex++) {
+                NSDictionary *dictionary = array[subIndex];
+                id object = [self createOrUpdateInRealm:realm withJSONDictionary:dictionary];
+                [result addObject:object];
+            }
+        }
     }
     
     return [result copy];
