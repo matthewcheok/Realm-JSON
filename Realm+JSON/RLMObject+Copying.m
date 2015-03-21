@@ -11,6 +11,12 @@
 #import <Realm/RLMProperty.h>
 #import <Realm/RLMObjectSchema.h>
 
+@interface RLMProperty (Copying_Internal)
+
+@property (nonatomic, assign) BOOL isPrimary;
+
+@end
+
 @implementation RLMObject (Copying)
 
 - (instancetype)shallowCopy {
@@ -31,7 +37,7 @@
             [thisArray addObjects:thatArray];
         }
         // assume data
-        else {
+        else if (!property.isPrimary) {
             id value = [object valueForKeyPath:property.name];
             [self setValue:value forKeyPath:property.name];
         }
