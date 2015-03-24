@@ -304,14 +304,16 @@ static NSInteger const kCreateBatchSize = 100;
 		mappingForClassName = [NSMutableDictionary dictionary];
 	}
 
-	NSDictionary *mapping = mappingForClassName[[self className]];
+	NSMutableDictionary *mapping = mappingForClassName[[self className]];
 	if (!mapping) {
 		SEL selector = NSSelectorFromString(@"JSONInboundMappingDictionary");
+        mapping = [self mc_defaultInboundMapping].mutableCopy;
 		if ([self respondsToSelector:selector]) {
-			mapping = MCValueFromInvocation(self, selector);
-		}
-		else {
-			mapping = [self mc_defaultInboundMapping];
+			NSDictionary * customMapping = MCValueFromInvocation(self, selector);
+            for (NSString * key in customMapping.allValues) {
+                [mapping removeObjectForKey:key];
+            }
+            [mapping addEntriesFromDictionary:customMapping];
 		}
 		mappingForClassName[[self className]] = mapping;
 	}
