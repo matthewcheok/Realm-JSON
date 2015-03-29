@@ -61,7 +61,7 @@ static NSInteger const kCreateBatchSize = 100;
 + (NSArray *)createOrUpdateInRealm:(RLMRealm *)realm withJSONArray:(NSArray *)array {
     NSInteger count = array.count;
     NSMutableArray *result = [NSMutableArray array];
-    
+
     for (NSInteger index=0; index*kCreateBatchSize<count; index++) {
         NSInteger size = MIN(kCreateBatchSize, count-index*kCreateBatchSize);
         @autoreleasepool {
@@ -72,7 +72,7 @@ static NSInteger const kCreateBatchSize = 100;
             }
         }
     }
-    
+
     return [result copy];
 }
 
@@ -277,7 +277,7 @@ static NSInteger const kCreateBatchSize = 100;
 
 + (NSDictionary *)mc_defaultInboundMapping {
     RLMObjectSchema *schema = [self sharedSchema];
-    
+
 	NSMutableDictionary *result = [NSMutableDictionary dictionary];
     for (RLMProperty *property in schema.properties) {
         result[property.name] = property.name;
@@ -289,11 +289,10 @@ static NSInteger const kCreateBatchSize = 100;
 
 + (NSDictionary *)mc_defaultOutboundMapping {
     RLMObjectSchema *schema = [self sharedSchema];
-    
+
     NSMutableDictionary *result = [NSMutableDictionary dictionary];
     for (RLMProperty *property in schema.properties) {
         result[property.name] = property.name;
-        
     }
 
 	return [result copy];
