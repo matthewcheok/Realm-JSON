@@ -8,6 +8,15 @@
 
 #import "RLMObject+JSON.h"
 
+#import <Realm/RLMProperty.h>
+#import <Realm/RLMObjectSchema.h>
+
+// RLMSchema private interface
+@interface RLMSchema ()
+// class for string
++ (Class)classForString:(NSString *)className;
+@end
+
 #import <objc/runtime.h>
 
 static id MCValueFromInvocation(id object, SEL selector) {
@@ -47,12 +56,21 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 
 @implementation RLMObject (JSON)
 
+static NSInteger const kCreateBatchSize = 100;
+
 + (NSArray *)createOrUpdateInRealm:(RLMRealm *)realm withJSONArray:(NSArray *)array {
+    NSInteger count = array.count;
     NSMutableArray *result = [NSMutableArray array];
     
-    for (NSDictionary *dictionary in array) {
-        id object = [self createOrUpdateInRealm:realm withJSONDictionary:dictionary];
-        [result addObject:object];
+    for (NSInteger index=0; index*kCreateBatchSize<count; index++) {
+        NSInteger size = MIN(kCreateBatchSize, count-index*kCreateBatchSize);
+        @autoreleasepool {
+            for (NSInteger subIndex=index*kCreateBatchSize; subIndex<size; subIndex++) {
+                NSDictionary *dictionary = array[subIndex];
+                id object = [self createOrUpdateInRealm:realm withJSONDictionary:dictionary];
+                [result addObject:object];
+            }
+        }
     }
     
     return [result copy];
@@ -74,10 +92,10 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 	NSAssert(primaryKey, @"No primary key on class %@", [self description]);
 
 	NSString *primaryPredicate = [NSString stringWithFormat:@"%@ = %%@", primaryKey];
-	RLMResults *array = [self objectsInRealm:realm where:primaryPredicate, value];
+	RLMResults *results = [self objectsInRealm:realm where:primaryPredicate, value];
 
-	if (array.count > 0) {
-		return array.firstObject;
+	if (results.count > 0) {
+		return results.firstObject;
 	}
 	else {
 		return nil;
@@ -142,25 +160,32 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 	NSMutableDictionary *result = [NSMutableDictionary dictionary];
 	NSDictionary *mapping = [[self class] mc_inboundMapping];
     
-    Class modelClass = NSClassFromString([[self class] className]);
 	for (NSString *dictionaryKeyPath in mapping) {
 		NSString *objectKeyPath = mapping[dictionaryKeyPath];
 
 		id value = [dictionary valueForKeyPath:dictionaryKeyPath];
 		if (value) {
             
-			Class propertyClass = [modelClass mc_classForPropertyKey:objectKeyPath];
+			Class propertyClass = [[self class] mc_classForPropertyKey:objectKeyPath];
 
 			if ([propertyClass isSubclassOfClass:[RLMObject class]]) {
 				if (!value || [value isEqual:[NSNull null]]) {
 					continue;
 				}
 
-				value = [propertyClass mc_createObjectFromJSONDictionary:value];
+                if ([value isKindOfClass:[NSDictionary class]]) {
+                    value = [propertyClass mc_createObjectFromJSONDictionary:value];
+                } else {
+                    NSValueTransformer *transformer = [[self class] mc_transformerForPropertyKey:objectKeyPath];
+                    
+                    if (transformer) {
+                        value = [transformer transformedValue:value];
+                    }
+                }
 			}
 			else if ([propertyClass isSubclassOfClass:[RLMArray class]]) {
                 RLMProperty *property = [self mc_propertyForPropertyKey:objectKeyPath];
-                Class elementClass = NSClassFromString(property.objectClassName);
+                Class elementClass = [RLMSchema classForString: property.objectClassName];
                 
                 NSMutableArray *array = [NSMutableArray array];
                 for (id item in(NSArray*) value) {
@@ -200,13 +225,12 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 	NSMutableDictionary *result = [NSMutableDictionary dictionary];
 	NSDictionary *mapping = [[self class] mc_outboundMapping];
 
-    Class modelClass = NSClassFromString([[self class] className]);
 	for (NSString *objectKeyPath in mapping) {
 		NSString *dictionaryKeyPath = mapping[objectKeyPath];
 
 		id value = [self valueForKeyPath:objectKeyPath];
 		if (value) {
-			Class propertyClass = [modelClass mc_classForPropertyKey:objectKeyPath];
+			Class propertyClass = [[self class] mc_classForPropertyKey:objectKeyPath];
 
 			if ([propertyClass isSubclassOfClass:[RLMObject class]]) {
 				value = [value mc_createJSONDictionary];
@@ -219,7 +243,7 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 				value = [array copy];
 			}
 			else {
-				NSValueTransformer *transformer = [modelClass mc_transformerForPropertyKey:objectKeyPath];
+				NSValueTransformer *transformer = [[self class] mc_transformerForPropertyKey:objectKeyPath];
 
 				if (transformer) {
 					value = [transformer reverseTransformedValue:value];
@@ -275,43 +299,41 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 #pragma mark - Convenience Methods
 
 + (NSDictionary *)mc_inboundMapping {
-	Class objectClass = NSClassFromString([self className]);
 	static NSMutableDictionary *mappingForClassName = nil;
 	if (!mappingForClassName) {
 		mappingForClassName = [NSMutableDictionary dictionary];
 	}
 
-	NSDictionary *mapping = mappingForClassName[[objectClass description]];
+	NSDictionary *mapping = mappingForClassName[[self className]];
 	if (!mapping) {
 		SEL selector = NSSelectorFromString(@"JSONInboundMappingDictionary");
-		if ([objectClass respondsToSelector:selector]) {
-			mapping = MCValueFromInvocation(objectClass, selector);
+		if ([self respondsToSelector:selector]) {
+			mapping = MCValueFromInvocation(self, selector);
 		}
 		else {
-			mapping = [objectClass mc_defaultInboundMapping];
+			mapping = [self mc_defaultInboundMapping];
 		}
-		mappingForClassName[[objectClass description]] = mapping;
+		mappingForClassName[[self className]] = mapping;
 	}
 	return mapping;
 }
 
 + (NSDictionary *)mc_outboundMapping {
-	Class objectClass = NSClassFromString([self className]);
 	static NSMutableDictionary *mappingForClassName = nil;
 	if (!mappingForClassName) {
 		mappingForClassName = [NSMutableDictionary dictionary];
 	}
 
-	NSDictionary *mapping = mappingForClassName[[objectClass description]];
+	NSDictionary *mapping = mappingForClassName[[self className]];
 	if (!mapping) {
 		SEL selector = NSSelectorFromString(@"JSONOutboundMappingDictionary");
-		if ([objectClass respondsToSelector:selector]) {
-			mapping = MCValueFromInvocation(objectClass, selector);
+		if ([self respondsToSelector:selector]) {
+			mapping = MCValueFromInvocation(self, selector);
 		}
 		else {
-			mapping = [objectClass mc_defaultOutboundMapping];
+			mapping = [self mc_defaultOutboundMapping];
 		}
-		mappingForClassName[[objectClass description]] = mapping;
+		mappingForClassName[[self className]] = mapping;
 	}
 	return mapping;
 }
@@ -345,8 +367,7 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 }
 
 + (NSValueTransformer *)mc_transformerForPropertyKey:(NSString *)key {
-	Class modelClass = NSClassFromString([self className]);
-	Class propertyClass = [modelClass mc_classForPropertyKey:key];
+	Class propertyClass = [self mc_classForPropertyKey:key];
 	SEL selector = NSSelectorFromString([key stringByAppendingString:@"JSONTransformer"]);
 
 	NSValueTransformer *transformer = nil;

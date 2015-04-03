@@ -9,8 +9,10 @@
 #import "MCJSONDateTransformer.h"
 
 NSString* const MCJSONDateTimeTransformerName = @"MCJSONDateTimeTransformerName";
+NSString* const MCJSONDateTimeMillisecondTransformerName = @"MCJSONDateTimeMillisecondTransformerName";
 NSString* const MCJSONDateOnlyTransformerName = @"MCJSONDateOnlyTransformerName";
 static NSString *const kDateFormatDateTime = @"yyyy-MM-dd'T'HH:mm:ssZZZZZ";
+static NSString *const kDateFormatDateTimeMillisecond = @"yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ";
 static NSString *const kDateFormatDateOnly = @"yyyy-MM-dd";
 
 @interface MCJSONDateTransformer ()
@@ -23,6 +25,7 @@ static NSString *const kDateFormatDateOnly = @"yyyy-MM-dd";
 
 + (void)load {
     [NSValueTransformer setValueTransformer:[[self alloc] initWithDateStyle:MCJSONDateTransformerStyleDateTime] forName:MCJSONDateTimeTransformerName];
+    [NSValueTransformer setValueTransformer:[[self alloc] initWithDateStyle:MCJSONDateTransformerStyleDateTimeMillisecond] forName:MCJSONDateTimeMillisecondTransformerName];
     [NSValueTransformer setValueTransformer:[[self alloc] initWithDateStyle:MCJSONDateTransformerStyleDateOnly] forName:MCJSONDateOnlyTransformerName];
 }
 
@@ -40,7 +43,10 @@ static NSString *const kDateFormatDateOnly = @"yyyy-MM-dd";
 			case MCJSONDateTransformerStyleDateOnly:
 				self.formatter.dateFormat = kDateFormatDateOnly;
 				break;
-
+            case MCJSONDateTransformerStyleDateTimeMillisecond:
+                self.formatter.dateFormat = kDateFormatDateTimeMillisecond;
+                break;
+                
 			default:
 				self.formatter.dateFormat = kDateFormatDateTime;
 				break;
