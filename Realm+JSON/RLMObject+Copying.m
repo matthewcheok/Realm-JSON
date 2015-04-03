@@ -20,9 +20,7 @@
 @implementation RLMObject (Copying)
 
 - (instancetype)shallowCopy {
-    Class class = NSClassFromString([[self class] className]);
-
-    id object = [[class alloc] init];
+    id object = [[[self class] alloc] init];
     [object mergePropertiesFromObject:self];
     
     return object;
@@ -45,9 +43,7 @@
 }
 
 - (instancetype)deepCopy {
-    Class class = NSClassFromString([[self class] className]);
-    
-    RLMObject *object = [[class alloc] init];
+    RLMObject *object = [[[self class] alloc] init];
     
     for (RLMProperty *property in self.objectSchema.properties) {
 
