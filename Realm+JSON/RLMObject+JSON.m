@@ -65,8 +65,8 @@ static NSInteger const kCreateBatchSize = 100;
     for (NSInteger index=0; index*kCreateBatchSize<count; index++) {
         NSInteger size = MIN(kCreateBatchSize, count-index*kCreateBatchSize);
         @autoreleasepool {
-            for (NSInteger subIndex=index*kCreateBatchSize; subIndex<size; subIndex++) {
-                NSDictionary *dictionary = array[subIndex];
+            for (NSInteger subIndex=0; subIndex<size; subIndex++) {
+                NSDictionary *dictionary = array[index*kCreateBatchSize+subIndex];
                 id object = [self createOrUpdateInRealm:realm withJSONDictionary:dictionary];
                 [result addObject:object];
             }
