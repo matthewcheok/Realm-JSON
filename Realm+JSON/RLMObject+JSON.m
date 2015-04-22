@@ -189,7 +189,13 @@ static NSInteger const kCreateBatchSize = 100;
                 
                 NSMutableArray *array = [NSMutableArray array];
                 for (id item in(NSArray*) value) {
-                    [array addObject:[elementClass mc_createObjectFromJSONDictionary:item]];
+                    if([item isKindOfClass:[NSString class]]){
+                        [array addObject:[elementClass mc_createObjectFromJSONDictionary:@{@"":item}]];
+                    }else if ([item isKindOfClass:[NSDictionary class]]){
+                        [array addObject:[elementClass mc_createObjectFromJSONDictionary:item]];
+                    }else{
+                        NSLog(@"item type not supported");
+                    }
                 }
                 value = [array copy];
 			}
