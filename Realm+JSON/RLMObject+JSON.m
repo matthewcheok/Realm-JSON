@@ -164,7 +164,7 @@ static NSInteger const kCreateBatchSize = 100;
 		NSString *objectKeyPath = mapping[dictionaryKeyPath];
 
 		id value = [dictionary valueForKeyPath:dictionaryKeyPath];
-		if (value) {
+        if (value&&![value isKindOfClass:[NSNull class]]) {
             
 			Class propertyClass = [[self class] mc_classForPropertyKey:objectKeyPath];
 
