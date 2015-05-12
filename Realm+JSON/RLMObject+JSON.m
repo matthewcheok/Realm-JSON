@@ -162,8 +162,12 @@ static NSInteger const kCreateBatchSize = 100;
     
 	for (NSString *dictionaryKeyPath in mapping) {
 		NSString *objectKeyPath = mapping[dictionaryKeyPath];
-
 		id value = [dictionary valueForKeyPath:dictionaryKeyPath];
+        RLMProperty *property = [self mc_propertyForPropertyKey:objectKeyPath];
+        if((property.type==RLMPropertyTypeInt||
+            property.type==RLMPropertyTypeBool)&&[value isKindOfClass:[NSString class]]){
+            value = @([((NSString *)value) integerValue]);
+        }
         if (value&&![value isKindOfClass:[NSNull class]]) {
             
 			Class propertyClass = [[self class] mc_classForPropertyKey:objectKeyPath];
@@ -184,7 +188,6 @@ static NSInteger const kCreateBatchSize = 100;
                 }
 			}
 			else if ([propertyClass isSubclassOfClass:[RLMArray class]]) {
-                RLMProperty *property = [self mc_propertyForPropertyKey:objectKeyPath];
                 Class elementClass = [RLMSchema classForString: property.objectClassName];
                 
                 NSMutableArray *array = [NSMutableArray array];
