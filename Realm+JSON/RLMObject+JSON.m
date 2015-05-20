@@ -168,6 +168,8 @@ static NSInteger const kCreateBatchSize = 100;
             property.type==RLMPropertyTypeBool)&&[value isKindOfClass:[NSString class]]){
             value = @([((NSString *)value) integerValue]);
         }
+
+        id value = [dictionary valueForKeyPath:dictionaryKeyPath]?:[dictionary valueForKeyPath:objectKeyPath];
         if (value&&![value isKindOfClass:[NSNull class]]) {
             
 			Class propertyClass = [[self class] mc_classForPropertyKey:objectKeyPath];
