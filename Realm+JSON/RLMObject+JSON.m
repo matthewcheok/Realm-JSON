@@ -162,14 +162,13 @@ static NSInteger const kCreateBatchSize = 100;
     
 	for (NSString *dictionaryKeyPath in mapping) {
 		NSString *objectKeyPath = mapping[dictionaryKeyPath];
-		id value = [dictionary valueForKeyPath:dictionaryKeyPath];
+		id value = [dictionary valueForKeyPath:dictionaryKeyPath]?:[dictionary valueForKeyPath:objectKeyPath];
         RLMProperty *property = [self mc_propertyForPropertyKey:objectKeyPath];
         if((property.type==RLMPropertyTypeInt||
             property.type==RLMPropertyTypeBool)&&[value isKindOfClass:[NSString class]]){
             value = @([((NSString *)value) integerValue]);
         }
 
-        id value = [dictionary valueForKeyPath:dictionaryKeyPath]?:[dictionary valueForKeyPath:objectKeyPath];
         if (value&&![value isKindOfClass:[NSNull class]]) {
             
 			Class propertyClass = [[self class] mc_classForPropertyKey:objectKeyPath];
