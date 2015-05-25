@@ -182,8 +182,16 @@ static NSInteger const kCreateBatchSize = 100;
 				}
 
 				if ([value isKindOfClass:[NSDictionary class]]) {
-					value = [propertyClass mc_createObjectFromJSONDictionary:value inRealm:realm];
-				}
+                    value = [propertyClass mc_createObjectFromJSONDictionary:value inRealm:realm];
+                } else if (![value isKindOfClass:[NSArray class]]) {
+                    value = [propertyClass objectInRealm:realm forPrimaryKey:value];
+                } else {
+                    value = nil;
+                }
+                
+                if (!value) {
+                    continue;
+                }
 			}
 			else if ([propertyClass isSubclassOfClass:[RLMArray class]]) {
 				RLMProperty *property = [self mc_propertyForPropertyKey:objectKeyPath];
@@ -199,10 +207,10 @@ static NSInteger const kCreateBatchSize = 100;
                             if ([item isKindOfClass:[NSDictionary class]]) {
                                 [array addObject:[elementClass mc_createObjectFromJSONDictionary:item inRealm:realm]];
                             } else {
-                                id realmItem = [elementClass objectInRealm:realm forPrimaryKey:item];
+                                id object = [elementClass objectInRealm:realm forPrimaryKey:item];
                                 
-                                if (realmItem) {
-                                    [array addObject:realmItem];
+                                if (object) {
+                                    [array addObject:object];
                                 }
                             }
                         }
