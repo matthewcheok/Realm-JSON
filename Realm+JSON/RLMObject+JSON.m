@@ -77,7 +77,7 @@ static NSInteger const kCreateBatchSize = 100;
 }
 
 + (instancetype)createOrUpdateInRealm:(RLMRealm *)realm withJSONDictionary:(NSDictionary *)dictionary {
-	return [self createOrUpdateInRealm:realm withValue:[self mc_createObjectFromJSONDictionary:dictionary]];
+	return [self createOrUpdateInRealm:realm withValue:[self mc_createObjectFromJSONDictionary:dictionary inRealm:realm]];
 }
 
 + (instancetype)objectInRealm:(RLMRealm *)realm withPrimaryKeyValue:(id)primaryKeyValue {
@@ -102,11 +102,15 @@ static NSInteger const kCreateBatchSize = 100;
 	}
 }
 
-- (instancetype)initWithJSONDictionary:(NSDictionary *)dictionary {
-	self = [self initWithValue:[[self class] mc_createObjectFromJSONDictionary:dictionary]];
-	if (self) {
-	}
-	return self;
+- (instancetype)initWithJSONDictionary:(NSDictionary *)dictionary
+{
+    return [self initWithJSONDictionary:dictionary inRealm:[RLMRealm defaultRealm]];
+}
+
+- (instancetype)initWithJSONDictionary:(NSDictionary *)dictionary inRealm:(RLMRealm *)realm {
+	self = [self initWithValue:[[self class] mc_createObjectFromJSONDictionary:dictionary inRealm:realm]];
+
+    return self;
 }
 
 - (NSDictionary *)JSONDictionary {
@@ -156,7 +160,7 @@ static NSInteger const kCreateBatchSize = 100;
 
 #pragma mark - Private
 
-+ (id)mc_createObjectFromJSONDictionary:(NSDictionary *)dictionary {
++ (id)mc_createObjectFromJSONDictionary:(NSDictionary *)dictionary inRealm:(RLMRealm *)realm {
 	NSMutableDictionary *result = [NSMutableDictionary dictionary];
 	NSDictionary *mapping = [[self class] mc_inboundMapping];
 
@@ -178,18 +182,44 @@ static NSInteger const kCreateBatchSize = 100;
 				}
 
 				if ([value isKindOfClass:[NSDictionary class]]) {
-					value = [propertyClass mc_createObjectFromJSONDictionary:value];
-				}
+                    value = [propertyClass mc_createObjectFromJSONDictionary:value inRealm:realm];
+                } else if (![value isKindOfClass:[NSArray class]]) {
+                    value = [propertyClass objectInRealm:realm forPrimaryKey:value];
+                } else {
+                    value = nil;
+                }
+                
+                if (!value) {
+                    continue;
+                }
 			}
 			else if ([propertyClass isSubclassOfClass:[RLMArray class]]) {
 				RLMProperty *property = [self mc_propertyForPropertyKey:objectKeyPath];
 				Class elementClass = [RLMSchema classForString: property.objectClassName];
 
-				NSMutableArray *array = [NSMutableArray array];
-				for (id item in(NSArray*) value) {
-					[array addObject:[elementClass mc_createObjectFromJSONDictionary:item]];
-				}
-				value = [array copy];
+                if ([value isKindOfClass:[NSArray class]]) {
+                    NSArray *values = (NSArray *)value;
+                    
+                    if (values.count) {
+                        NSMutableArray *array = [NSMutableArray array];
+                        
+                        for (id item in values) {
+                            if ([item isKindOfClass:[NSDictionary class]]) {
+                                [array addObject:[elementClass mc_createObjectFromJSONDictionary:item inRealm:realm]];
+                            } else {
+                                id object = [elementClass objectInRealm:realm forPrimaryKey:item];
+                                
+                                if (object) {
+                                    [array addObject:object];
+                                }
+                            }
+                        }
+                        
+                        value = [array copy];
+                    }
+                } else {
+                    value = @[];
+                }
 			}
 
 			if ([objectKeyPath isEqualToString:@"self"]) {

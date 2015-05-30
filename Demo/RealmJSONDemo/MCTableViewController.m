@@ -44,26 +44,18 @@
 	}];
 }
 
-- (void)refreshData {
-	self.results = [[MCEpisode allObjectsInRealm:[RLMRealm defaultRealm]] sortedResultsUsingProperty:@"publishedDate" ascending:NO];
-	[self.tableView reloadData];
-}
-
 #pragma mark - UIViewController
 
 - (void)viewDidLoad {
 	[super viewDidLoad];
+    self.results = [[MCEpisode allObjectsInRealm:[RLMRealm defaultRealm]] sortedResultsUsingProperty:@"publishedDate" ascending:NO];
+    [self.tableView reloadData];
 
 	self.token = [[RLMRealm defaultRealm] addNotificationBlock: ^(NSString *notification, RLMRealm *realm) {
-	    [self refreshData];
+        [self.tableView reloadData];
 	}];
-	[self refreshData];
+    
 	[self reloadData];
-}
-
-- (void)didReceiveMemoryWarning {
-	[super didReceiveMemoryWarning];
-	// Dispose of any resources that can be recreated.
 }
 
 #pragma mark - UITableViewDataSource

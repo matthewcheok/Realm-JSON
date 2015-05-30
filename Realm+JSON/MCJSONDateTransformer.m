@@ -64,11 +64,15 @@ static NSString *const kDateFormatDateOnly = @"yyyy-MM-dd";
 }
 
 - (id)transformedValue:(id)value {
-	return [self.formatter dateFromString:value];
+    if ([value isKindOfClass:[NSNumber class]]) {
+        value = [value stringValue];
+    }
+    
+    return [value isKindOfClass:[NSString class]] ? [self.formatter dateFromString:value] : nil;
 }
 
 - (id)reverseTransformedValue:(id)value {
-	return [self.formatter stringFromDate:value];
+    return [value isKindOfClass:[NSString class]] ? [self.formatter stringFromDate:value] : nil;
 }
 
 @end

@@ -17,6 +17,7 @@
 + (instancetype)objectInRealm:(RLMRealm *)realm withPrimaryKeyValue:(id)primaryKeyValue;
 
 - (instancetype)initWithJSONDictionary:(NSDictionary *)dictionary;
+- (instancetype)initWithJSONDictionary:(NSDictionary *)dictionary inRealm:(RLMRealm *)realm;
 - (NSDictionary *)JSONDictionary;
 
 - (id)primaryKeyValue;
