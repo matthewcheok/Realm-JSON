@@ -308,46 +308,48 @@ static NSInteger const kCreateBatchSize = 100;
 
 #pragma mark - Convenience Methods
 
+static NSMutableDictionary *mappingInForClassName = nil;
 + (NSDictionary *)mc_inboundMapping {
-	static NSMutableDictionary *mappingForClassName = nil;
-	if (!mappingForClassName) {
-		mappingForClassName = [NSMutableDictionary dictionary];
-	}
-
-	NSMutableDictionary *mapping = mappingForClassName[[self className]];
-	if (!mapping) {
-		SEL selector = NSSelectorFromString(@"JSONInboundMappingDictionary");
-        mapping = [self mc_defaultInboundMapping].mutableCopy;
-		if ([self respondsToSelector:selector]) {
-			NSDictionary * customMapping = MCValueFromInvocation(self, selector);
-            for (NSString * key in customMapping.allValues) {
-                [mapping removeObjectForKey:key];
+    if (!mappingInForClassName) {
+        mappingInForClassName = [NSMutableDictionary dictionary];
+    }
+    @synchronized(mappingInForClassName){
+        NSMutableDictionary *mapping = mappingInForClassName[[self className]];
+        if (!mapping) {
+            SEL selector = NSSelectorFromString(@"JSONInboundMappingDictionary");
+            mapping = [self mc_defaultInboundMapping].mutableCopy;
+            if ([self respondsToSelector:selector]) {
+                NSDictionary * customMapping = MCValueFromInvocation(self, selector);
+                for (NSString * key in customMapping.allValues) {
+                    [mapping removeObjectForKey:key];
+                }
+                [mapping addEntriesFromDictionary:customMapping];
             }
-            [mapping addEntriesFromDictionary:customMapping];
-		}
-		mappingForClassName[[self className]] = mapping;
-	}
-	return mapping;
+            mappingInForClassName[[self className]] = mapping;
+        }
+        return mapping;
+    }
 }
 
+static NSMutableDictionary *mappingOutForClassName = nil;
 + (NSDictionary *)mc_outboundMapping {
-	static NSMutableDictionary *mappingForClassName = nil;
-	if (!mappingForClassName) {
-		mappingForClassName = [NSMutableDictionary dictionary];
-	}
-
-	NSDictionary *mapping = mappingForClassName[[self className]];
-	if (!mapping) {
-		SEL selector = NSSelectorFromString(@"JSONOutboundMappingDictionary");
-		if ([self respondsToSelector:selector]) {
-			mapping = MCValueFromInvocation(self, selector);
-		}
-		else {
-			mapping = [self mc_defaultOutboundMapping];
-		}
-		mappingForClassName[[self className]] = mapping;
-	}
-	return mapping;
+    if (!mappingOutForClassName) {
+        mappingOutForClassName = [NSMutableDictionary dictionary];
+    }
+    @synchronized(mappingOutForClassName){
+        NSDictionary *mapping = mappingOutForClassName[[self className]];
+        if (!mapping) {
+            SEL selector = NSSelectorFromString(@"JSONOutboundMappingDictionary");
+            if ([self respondsToSelector:selector]) {
+                mapping = MCValueFromInvocation(self, selector);
+            }
+            else {
+                mapping = [self mc_defaultOutboundMapping];
+            }
+            mappingOutForClassName[[self className]] = mapping;
+        }
+        return mapping;
+    }
 }
 
 + (RLMProperty *)mc_propertyForPropertyKey:(NSString *)key {
