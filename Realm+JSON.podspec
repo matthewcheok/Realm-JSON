@@ -8,11 +8,11 @@ Pod::Spec.new do |s|
   s.homepage = 'https://github.com/matthewcheok/Realm-JSON'
   s.author   = { 'Matthew Cheok' => 'cheok.jz@gmail.com' }
   s.requires_arc = true
-  s.source   = {
-    :git => 'https://github.com/matthewcheok/Realm-JSON.git',
-    :branch => 'master',
-    :tag => s.version.to_s
-  }
+#  s.source   = {
+#   :git => 'https://github.com/demon1105/Realm-JSON.git',
+#   :branch => 'master',
+#   :tag => s.version.to_s
+# }
   s.source_files = 'Realm+JSON/*.{h,m}'
   s.public_header_files = 'Realm+JSON/*.h'
 
