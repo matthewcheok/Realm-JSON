@@ -156,7 +156,19 @@ static NSInteger const kCreateBatchSize = 100;
 
 #pragma mark - Private
 
-+ (id)mc_createObjectFromJSONDictionary:(NSDictionary *)dictionary {
++ (id)mc_createObjectFromJSONDictionary:(NSDictionary *)originalDictionary {
+    //移除数据中所有的null对象
+    NSMutableDictionary * dictionary = [originalDictionary mutableCopy];
+    NSArray *keys =
+    [[dictionary keysOfEntriesWithOptions:NSEnumerationReverse
+                                  passingTest:^BOOL(id key, id obj, BOOL *stop) {
+                                      if ([obj isKindOfClass:[NSNull class]]) {
+                                          return YES;
+                                      }else{
+                                          return NO;
+                                      }}] allObjects];
+    [dictionary removeObjectsForKeys:keys];
+    
 	NSMutableDictionary *result = [NSMutableDictionary dictionary];
 	NSDictionary *mapping = [[self class] mc_inboundMapping];
 
