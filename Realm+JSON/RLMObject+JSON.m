@@ -373,13 +373,14 @@ static NSMutableDictionary *mappingOutForClassName = nil;
 		if (!set) {
 			set = [NSCharacterSet characterSetWithCharactersInString:@"\"<"];
 		}
-
-		NSString *string;
-		NSScanner *scanner = [NSScanner scannerWithString:attributes];
-		scanner.charactersToBeSkipped = set;
-		[scanner scanUpToCharactersFromSet:set intoString:NULL];
-		[scanner scanUpToCharactersFromSet:set intoString:&string];
-		return NSClassFromString(string);
+        @synchronized(set){
+            NSString *string;
+            NSScanner *scanner = [NSScanner scannerWithString:attributes];
+            scanner.charactersToBeSkipped = set;
+            [scanner scanUpToCharactersFromSet:set intoString:NULL];
+            [scanner scanUpToCharactersFromSet:set intoString:&string];
+            return NSClassFromString(string);
+        }
 	}
 	return nil;
 }
