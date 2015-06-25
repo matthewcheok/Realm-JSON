@@ -64,6 +64,7 @@ static NSString *const kDateFormatDateOnly = @"yyyy-MM-dd";
 }
 
 - (id)transformedValue:(id)value {
+    if([value isKindOfClass:[NSNull class]])return nil;
 	return [self.formatter dateFromString:value];
 }
 
