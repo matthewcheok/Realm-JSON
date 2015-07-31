@@ -64,7 +64,13 @@ static NSString *const kDateFormatDateOnly = @"yyyy-MM-dd";
 }
 
 - (id)transformedValue:(id)value {
-	return [self.formatter dateFromString:value];
+    id result = nil;
+    if([value isKindOfClass:[NSString class]]) {
+        result = [self.formatter dateFromString:value];
+    } else if ([value isKindOfClass:[NSNumber class]]){
+        result [NSDate dateWithTimeIntervalSince1970:[value integerValue]];
+    }
+    return result;
 }
 
 - (id)reverseTransformedValue:(id)value {
