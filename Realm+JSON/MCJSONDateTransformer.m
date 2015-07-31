@@ -34,41 +34,45 @@ static NSString *const kDateFormatDateOnly = @"yyyy-MM-dd";
 }
 
 - (instancetype)initWithDateStyle:(MCJSONDateTransformerStyle)style {
-	self = [super init];
-	if (self) {
-		self.formatter = [[NSDateFormatter alloc] init];
+    self = [super init];
+    if (self) {
+        self.formatter = [[NSDateFormatter alloc] init];
         self.formatter.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
-
-		switch (style) {
-			case MCJSONDateTransformerStyleDateOnly:
-				self.formatter.dateFormat = kDateFormatDateOnly;
-				break;
+        
+        switch (style) {
+            case MCJSONDateTransformerStyleDateOnly:
+                self.formatter.dateFormat = kDateFormatDateOnly;
+                break;
             case MCJSONDateTransformerStyleDateTimeMillisecond:
                 self.formatter.dateFormat = kDateFormatDateTimeMillisecond;
                 break;
                 
-			default:
-				self.formatter.dateFormat = kDateFormatDateTime;
-				break;
-		}
-	}
-	return self;
+            default:
+                self.formatter.dateFormat = kDateFormatDateTime;
+                break;
+        }
+    }
+    return self;
 }
 
 + (Class)transformedValueClass {
-	return [NSDate class];
+    return [NSDate class];
 }
 
 + (BOOL)allowsReverseTransformation {
-	return YES;
+    return YES;
 }
 
 - (id)transformedValue:(id)value {
-	return [self.formatter dateFromString:value];
+    if([value isKindOfClass:[NSString class]]) {
+        return [self.formatter dateFromString:value];
+    } else if ([value isKindOfClass:[NSNumber class]]){
+        return [NSDate dateWithTimeIntervalSince1970:[value integerValue]];
+    }
 }
 
 - (id)reverseTransformedValue:(id)value {
-	return [self.formatter stringFromDate:value];
+    return [self.formatter stringFromDate:value];
 }
 
 @end
