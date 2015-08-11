@@ -57,6 +57,14 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 @implementation RLMObject (JSON)
 
 static NSInteger const kCreateBatchSize = 100;
+static NSMutableDictionary *mappingOutForClassName = nil;
+static NSMutableDictionary *mappingInForClassName = nil;
+
++(void)load
+{
+    mappingOutForClassName = [NSMutableDictionary dictionary];
+    mappingInForClassName = [NSMutableDictionary dictionary];
+}
 
 + (NSArray *)createOrUpdateInRealm:(RLMRealm *)realm withJSONArray:(NSArray *)array {
     NSInteger count = array.count;
@@ -312,11 +320,7 @@ static NSInteger const kCreateBatchSize = 100;
 
 #pragma mark - Convenience Methods
 
-static NSMutableDictionary *mappingInForClassName = nil;
 + (NSDictionary *)mc_inboundMapping {
-    if (!mappingInForClassName) {
-        mappingInForClassName = [NSMutableDictionary dictionary];
-    }
     @synchronized(mappingInForClassName){
         NSMutableDictionary *mapping = mappingInForClassName[[self className]];
         if (!mapping) {
@@ -335,11 +339,7 @@ static NSMutableDictionary *mappingInForClassName = nil;
     }
 }
 
-static NSMutableDictionary *mappingOutForClassName = nil;
 + (NSDictionary *)mc_outboundMapping {
-    if (!mappingOutForClassName) {
-        mappingOutForClassName = [NSMutableDictionary dictionary];
-    }
     @synchronized(mappingOutForClassName){
         NSDictionary *mapping = mappingOutForClassName[[self className]];
         if (!mapping) {
