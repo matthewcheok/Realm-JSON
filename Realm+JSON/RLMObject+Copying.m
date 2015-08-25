@@ -34,12 +34,9 @@
     id value;
     id selfValue;
     
-    BOOL (^valueIsEmpty)(id) = ^BOOL(id value) {
-        return (value == nil ||
-                [value isKindOfClass:[NSNull class]] ||
-                ([value respondsToSelector:@selector(length)] &&
-                 [(NSData *) value length] <= 0)
-                );
+    BOOL (^valuesAreEqual)(id, id) = ^BOOL(id value1, id value2) {
+        return ([[NSString stringWithFormat:@"%@", value1]
+                 isEqualToString:[NSString stringWithFormat:@"%@", value2]]);
     };
     
     for (RLMProperty *property in self.objectSchema.properties) {
@@ -51,8 +48,8 @@
             selfValue = [self valueForKeyPath:property.name];
 
             primaryKeyIsEmpty = (property.isPrimary &&
-                                 ![selfValue isEqual:value] &&
-                                 valueIsEmpty(selfValue));
+                                 !valuesAreEqual(value, selfValue)
+                                 );
             
             if (primaryKeyIsEmpty || !property.isPrimary) {
                 [self setValue:value forKeyPath:property.name];
@@ -66,6 +63,7 @@
         }
     }
 }
+
 
 - (instancetype)deepCopy {
     Class class = NSClassFromString([[self class] className]);
