@@ -29,7 +29,7 @@
 - (IBAction)reloadData {
 	AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
 	[manager GET:@"https://www.nsscreencast.com/api/episodes.json" parameters:nil success: ^(AFHTTPRequestOperation *operation, id responseObject) {
-	    NSArray *array = responseObject;
+	    NSArray *array = responseObject[@"episodes"];
         dispatch_async(dispatch_get_main_queue(), ^{
             RLMRealm *realm = [RLMRealm defaultRealm];
             

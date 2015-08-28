@@ -13,13 +13,13 @@
 
 + (NSDictionary *)JSONInboundMappingDictionary {
 	return @{
-			   @"episode.title": @"title",
-			   @"episode.description": @"subtitle",
-			   @"episode.id": @"episodeID",
-			   @"episode.episode_number": @"episodeNumber",
-			   @"episode.episode_type": @"episodeType",
-			   @"episode.thumbnail_url": @"thumbnailURL",
-			   @"episode.published_at": @"publishedDate",
+			   @"title": @"title",
+			   @"description": @"subtitle",
+			   @"id": @"episodeID",
+			   @"episode_number": @"episodeNumber",
+			   @"episode_type": @"episodeType",
+			   @"thumbnail_url": @"thumbnailURL",
+			   @"published_at": @"publishedDate",
 	};
 }
 
