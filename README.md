@@ -8,6 +8,7 @@ A concise [Mantle](https://github.com/Mantle/Mantle)-like way of working with [R
 
 ## Breaking Change
 
+- Method `- deepCopy` replaces the previous functionality of `- shallowCopy`, which no longer maintains an object's primary key
 - Updated to use native primary key support in Realm 0.85.0
 - Update your code to use methods `-createOrUpdateInRealm:withJSONArray:` or `-createOrUpdateInRealm:withJSONDictionary:`
 - You must wrap these methods in a write transaction (between `[realm beginWriteTransaction];` and `[realm commitWriteTransaction];`)
@@ -124,6 +125,7 @@ Methods `- shallowCopy` and `- mergePropertiesFromObject:` are provided. The lat
         [episode mergePropertiesFromObject:anotherEpisode];
     }];
 
+Additionally, method `- deepCopy` is provided. Unlike `- shallowCopy`, it maintains the object's primary key.
 
 ## License
 
