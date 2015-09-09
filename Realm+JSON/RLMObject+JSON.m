@@ -287,10 +287,11 @@ static NSInteger const kCreateBatchSize = 100;
 #pragma mark - Convenience Methods
 
 + (NSDictionary *)mc_inboundMapping {
-	static NSMutableDictionary *mappingForClassName = nil;
-	if (!mappingForClassName) {
-		mappingForClassName = [NSMutableDictionary dictionary];
-	}
+    static NSMutableDictionary *mappingForClassName = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        mappingForClassName = [NSMutableDictionary dictionary];
+    });
 
 	NSDictionary *mapping = mappingForClassName[[self className]];
 	if (!mapping) {
@@ -307,10 +308,11 @@ static NSInteger const kCreateBatchSize = 100;
 }
 
 + (NSDictionary *)mc_outboundMapping {
-	static NSMutableDictionary *mappingForClassName = nil;
-	if (!mappingForClassName) {
-		mappingForClassName = [NSMutableDictionary dictionary];
-	}
+    static NSMutableDictionary *mappingForClassName = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        mappingForClassName = [NSMutableDictionary dictionary];
+    });
 
 	NSDictionary *mapping = mappingForClassName[[self className]];
 	if (!mapping) {
@@ -339,10 +341,11 @@ static NSInteger const kCreateBatchSize = 100;
 + (Class)mc_classForPropertyKey:(NSString *)key {
 	NSString *attributes = MCTypeStringFromPropertyKey(self, key);
 	if ([attributes hasPrefix:@"T@"]) {
-		static NSCharacterSet *set = nil;
-		if (!set) {
-			set = [NSCharacterSet characterSetWithCharactersInString:@"\"<"];
-		}
+        static NSCharacterSet *set = nil;
+        static dispatch_once_t onceToken;
+        dispatch_once(&onceToken, ^{
+            set = [NSCharacterSet characterSetWithCharactersInString:@"\"<"];
+        });
 
 		NSString *string;
 		NSScanner *scanner = [NSScanner scannerWithString:attributes];
