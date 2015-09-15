@@ -12,6 +12,9 @@
 
 @interface RLMObject (JSON)
 
++ (void)setUseCamelToSnakeCaseDecoding:(BOOL)userDecoding;
++ (BOOL)useCamelToSnakeCaseDecoding;
+
 + (NSArray *)createOrUpdateInRealm:(RLMRealm *)realm withJSONArray:(NSArray *)array;
 + (instancetype)createOrUpdateInRealm:(RLMRealm *)realm withJSONDictionary:(NSDictionary *)dictionary;
 + (instancetype)objectInRealm:(RLMRealm *)realm withPrimaryKeyValue:(id)primaryKeyValue;

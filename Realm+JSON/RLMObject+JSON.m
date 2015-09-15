@@ -57,6 +57,20 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 @implementation RLMObject (JSON)
 
 static NSInteger const kCreateBatchSize = 100;
+static char kCamelToSnakeCaseDecodingKey;
+//static
+
++ (void)load {
+  [self setUseCamelToSnakeCaseDecoding:YES];
+}
+
++ (BOOL)useCamelToSnakeCaseDecoding {
+  return objc_getAssociatedObject(self, &kCamelToSnakeCaseDecodingKey);
+}
+
++ (void)setUseCamelToSnakeCaseDecoding:(BOOL)userDecoding {
+  objc_setAssociatedObject(self, &kCamelToSnakeCaseDecodingKey, @(userDecoding), OBJC_ASSOCIATION_RETAIN);
+}
 
 + (NSArray *)createOrUpdateInRealm:(RLMRealm *)realm withJSONArray:(NSArray *)array {
     NSInteger count = array.count;
@@ -265,8 +279,11 @@ static NSInteger const kCreateBatchSize = 100;
 
 	NSMutableDictionary *result = [NSMutableDictionary dictionary];
     for (RLMProperty *property in schema.properties) {
-        result[[property.name camelToSnakeCase]] = property.name;
-
+        if ([self useCamelToSnakeCaseDecoding] == YES) {
+            result[[property.name camelToSnakeCase]] = property.name;
+        } else {
+            result[property.name] = property.name;
+        }
     }
 
 	return [result copy];
@@ -277,8 +294,11 @@ static NSInteger const kCreateBatchSize = 100;
 
     NSMutableDictionary *result = [NSMutableDictionary dictionary];
     for (RLMProperty *property in schema.properties) {
-        result[property.name] = [property.name camelToSnakeCase];
-
+        if ([self useCamelToSnakeCaseDecoding] == YES) {
+            result[[property.name camelToSnakeCase]] = property.name;
+        } else {
+            result[property.name] = property.name;
+        }
     }
 
 	return [result copy];
