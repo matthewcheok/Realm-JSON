@@ -57,20 +57,7 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 @implementation RLMObject (JSON)
 
 static NSInteger const kCreateBatchSize = 100;
-static char kCamelToSnakeCaseDecodingKey;
 //static
-
-+ (void)load {
-  [self setUseCamelToSnakeCaseDecoding:YES];
-}
-
-+ (BOOL)useCamelToSnakeCaseDecoding {
-  return objc_getAssociatedObject(self, &kCamelToSnakeCaseDecodingKey);
-}
-
-+ (void)setUseCamelToSnakeCaseDecoding:(BOOL)userDecoding {
-  objc_setAssociatedObject(self, &kCamelToSnakeCaseDecodingKey, @(userDecoding), OBJC_ASSOCIATION_RETAIN);
-}
 
 + (NSArray *)createOrUpdateInRealm:(RLMRealm *)realm withJSONArray:(NSArray *)array {
     NSInteger count = array.count;
@@ -274,32 +261,32 @@ static char kCamelToSnakeCaseDecodingKey;
 
 #pragma mark - Properties
 
-+ (NSDictionary *)mc_defaultInboundMapping {
-    RLMObjectSchema *schema = [self sharedSchema];
++ (NSDictionary *)defaultInboundMappingForType:(RLMPropertyMapping)mappingType {
+  RLMObjectSchema *schema = [self sharedSchema];
 
-	NSMutableDictionary *result = [NSMutableDictionary dictionary];
-    for (RLMProperty *property in schema.properties) {
-        if ([self useCamelToSnakeCaseDecoding] == YES) {
-            result[[property.name camelToSnakeCase]] = property.name;
-        } else {
-            result[property.name] = property.name;
-        }
+  NSMutableDictionary *result = [NSMutableDictionary dictionary];
+  for (RLMProperty *property in schema.properties) {
+    if (mappingType == RLMPropertyMappingCamelToSnakeCase) {
+      result[[property.name camelToSnakeCase]] = property.name;
+    } else {
+      result[property.name] = property.name;
     }
+  }
 
 	return [result copy];
 }
 
-+ (NSDictionary *)mc_defaultOutboundMapping {
-    RLMObjectSchema *schema = [self sharedSchema];
++ (NSDictionary *)defaultOutboundMappingForType:(RLMPropertyMapping)mappingType {
+  RLMObjectSchema *schema = [self sharedSchema];
 
-    NSMutableDictionary *result = [NSMutableDictionary dictionary];
-    for (RLMProperty *property in schema.properties) {
-        if ([self useCamelToSnakeCaseDecoding] == YES) {
-            result[[property.name camelToSnakeCase]] = property.name;
-        } else {
-            result[property.name] = property.name;
-        }
+  NSMutableDictionary *result = [NSMutableDictionary dictionary];
+  for (RLMProperty *property in schema.properties) {
+    if (mappingType == RLMPropertyMappingCamelToSnakeCase) {
+      result[[property.name camelToSnakeCase]] = property.name;
+    } else {
+      result[property.name] = property.name;
     }
+  }
 
 	return [result copy];
 }
@@ -319,7 +306,7 @@ static char kCamelToSnakeCaseDecodingKey;
 			mapping = MCValueFromInvocation(self, selector);
 		}
 		else {
-			mapping = [self mc_defaultInboundMapping];
+			mapping = [self defaultInboundMappingForType:RLMPropertyMappingCamelToSnakeCase];
 		}
 		mappingForClassName[[self className]] = mapping;
 	}
@@ -339,7 +326,7 @@ static char kCamelToSnakeCaseDecodingKey;
 			mapping = MCValueFromInvocation(self, selector);
 		}
 		else {
-			mapping = [self mc_defaultOutboundMapping];
+			mapping = [self defaultOutboundMappingForType:RLMPropertyMappingCamelToSnakeCase];
 		}
 		mappingForClassName[[self className]] = mapping;
 	}
