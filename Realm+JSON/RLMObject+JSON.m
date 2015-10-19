@@ -214,7 +214,13 @@ static NSInteger const kCreateBatchSize = 100;
 
 - (id)mc_createJSONDictionary {
 	NSMutableDictionary *result = [NSMutableDictionary dictionary];
-	NSDictionary *mapping = [[self class] mc_outboundMapping];
+    NSDictionary *mapping;
+    SEL selector = NSSelectorFromString(@"JSONOutboundMappingDictionary");
+    if ([self respondsToSelector:selector]) {
+        mapping = [self performSelector:selector];
+    } else {
+        mapping = [[self class] mc_outboundMapping];
+    }
 
 	for (NSString *objectKeyPath in mapping) {
 		NSString *dictionaryKeyPath = mapping[objectKeyPath];
