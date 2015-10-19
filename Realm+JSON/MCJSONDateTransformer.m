@@ -34,25 +34,33 @@ static NSString *const kDateFormatDateOnly = @"yyyy-MM-dd";
 }
 
 - (instancetype)initWithDateStyle:(MCJSONDateTransformerStyle)style {
-	self = [super init];
-	if (self) {
-		self.formatter = [[NSDateFormatter alloc] init];
-        self.formatter.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
+    switch (style) {
+        case MCJSONDateTransformerStyleDateOnly:
+            self = [self initWithDateFormat:kDateFormatDateOnly];
+            break;
+        case MCJSONDateTransformerStyleDateTimeMillisecond:
+            self = [self initWithDateFormat:kDateFormatDateTimeMillisecond];
+            break;
+            
+        default:
+            self = [self initWithDateFormat:kDateFormatDateTime];
+            break;
+    }
+    return self;
+}
 
-		switch (style) {
-			case MCJSONDateTransformerStyleDateOnly:
-				self.formatter.dateFormat = kDateFormatDateOnly;
-				break;
-            case MCJSONDateTransformerStyleDateTimeMillisecond:
-                self.formatter.dateFormat = kDateFormatDateTimeMillisecond;
-                break;
-                
-			default:
-				self.formatter.dateFormat = kDateFormatDateTime;
-				break;
-		}
-	}
-	return self;
++ (instancetype)valueTransformerWithDateFormat:(NSString *)dateFormat {
+    return [[self alloc] initWithDateFormat:dateFormat];
+}
+
+- (instancetype)initWithDateFormat:(NSString *)dateFormat {
+    self = [super init];
+    if (self) {
+        self.formatter = [[NSDateFormatter alloc] init];
+        self.formatter.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
+        self.formatter.dateFormat = dateFormat;
+    }
+    return self;
 }
 
 + (Class)transformedValueClass {
