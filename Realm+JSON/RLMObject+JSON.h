@@ -10,6 +10,11 @@
 #import "MCJSONDateTransformer.h"
 #import "MCJSONValueTransformer.h"
 
+typedef NS_ENUM(NSUInteger, RLMPropertyMapping) {
+  RLMPropertyMappingCamelToSnakeCase = 0,
+  RLMPropertyMappingAsIs
+};
+
 @interface RLMObject (JSON)
 
 + (NSArray *)createOrUpdateInRealm:(RLMRealm *)realm withJSONArray:(NSArray *)array;
@@ -24,6 +29,9 @@
 
 - (void)performInTransaction:(void (^)())transaction;
 - (void)removeFromRealm;
+
++ (NSDictionary *)defaultInboundMappingForType:(RLMPropertyMapping)mappingType;
++ (NSDictionary *)defaultOutboundMappingForType:(RLMPropertyMapping)mappingType;
 
 @end
 

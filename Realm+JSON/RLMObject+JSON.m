@@ -57,6 +57,7 @@ static NSString *MCTypeStringFromPropertyKey(Class class, NSString *key) {
 @implementation RLMObject (JSON)
 
 static NSInteger const kCreateBatchSize = 100;
+//static
 
 + (NSArray *)createOrUpdateInRealm:(RLMRealm *)realm withJSONArray:(NSArray *)array {
     NSInteger count = array.count;
@@ -260,26 +261,32 @@ static NSInteger const kCreateBatchSize = 100;
 
 #pragma mark - Properties
 
-+ (NSDictionary *)mc_defaultInboundMapping {
-    RLMObjectSchema *schema = [self sharedSchema];
++ (NSDictionary *)defaultInboundMappingForType:(RLMPropertyMapping)mappingType {
+  RLMObjectSchema *schema = [self sharedSchema];
 
-	NSMutableDictionary *result = [NSMutableDictionary dictionary];
-    for (RLMProperty *property in schema.properties) {
-        result[[property.name camelToSnakeCase]] = property.name;
-
+  NSMutableDictionary *result = [NSMutableDictionary dictionary];
+  for (RLMProperty *property in schema.properties) {
+    if (mappingType == RLMPropertyMappingCamelToSnakeCase) {
+      result[[property.name camelToSnakeCase]] = property.name;
+    } else {
+      result[property.name] = property.name;
     }
+  }
 
 	return [result copy];
 }
 
-+ (NSDictionary *)mc_defaultOutboundMapping {
-    RLMObjectSchema *schema = [self sharedSchema];
++ (NSDictionary *)defaultOutboundMappingForType:(RLMPropertyMapping)mappingType {
+  RLMObjectSchema *schema = [self sharedSchema];
 
-    NSMutableDictionary *result = [NSMutableDictionary dictionary];
-    for (RLMProperty *property in schema.properties) {
-        result[property.name] = [property.name camelToSnakeCase];
-
+  NSMutableDictionary *result = [NSMutableDictionary dictionary];
+  for (RLMProperty *property in schema.properties) {
+    if (mappingType == RLMPropertyMappingCamelToSnakeCase) {
+      result[[property.name camelToSnakeCase]] = property.name;
+    } else {
+      result[property.name] = property.name;
     }
+  }
 
 	return [result copy];
 }
@@ -299,7 +306,7 @@ static NSInteger const kCreateBatchSize = 100;
 			mapping = MCValueFromInvocation(self, selector);
 		}
 		else {
-			mapping = [self mc_defaultInboundMapping];
+			mapping = [self defaultInboundMappingForType:RLMPropertyMappingCamelToSnakeCase];
 		}
 		mappingForClassName[[self className]] = mapping;
 	}
@@ -319,7 +326,7 @@ static NSInteger const kCreateBatchSize = 100;
 			mapping = MCValueFromInvocation(self, selector);
 		}
 		else {
-			mapping = [self mc_defaultOutboundMapping];
+			mapping = [self defaultOutboundMappingForType:RLMPropertyMappingCamelToSnakeCase];
 		}
 		mappingForClassName[[self className]] = mapping;
 	}
