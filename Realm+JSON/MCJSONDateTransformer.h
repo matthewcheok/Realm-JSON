@@ -22,5 +22,7 @@ typedef NS_ENUM(NSInteger, MCJSONDateTransformerStyle) {
 
 + (instancetype)valueTransformerWithDateStyle:(MCJSONDateTransformerStyle)style;
 - (instancetype)initWithDateStyle:(MCJSONDateTransformerStyle)style;
++ (instancetype)valueTransformerWithDateFormat:(NSString *)dateFormat;
+- (instancetype)initWithDateFormat:(NSString *)dateFormat;
 
 @end
