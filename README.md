@@ -87,6 +87,22 @@ You should specify the inbound and outbound JSON mapping on your `RLMObject` sub
 
 Leaving out either one of the above will result in a mapping that assumes camelCase for your properties which map to snake_case for the JSON equivalents.
 
+You can specify custom outbound mapping for each object as Realm does not support abstract data type in `RLMArray` (and sometimes back-end does not know how to serialise unknown properties):
+
+Assume it is a `Vehicle` class which tipe is either `VehicleType.Car` (then has `licensePlate`) or `VehicleType.Bike` and has `maxSpeed` property:
+
+```ObjC
+- (NSDictionary *)JSONOutboundMappingDictionary {
+    NSMutableDictionary *mapping = @{
+        @"maxSpeed": @"maxSpeed";
+    };
+    if (self.type == VehicleType.Car) {
+        @"licensePlate": @"licensePlate";
+    }
+    return mapping.copy;
+}
+```
+
 As you can do with Mantle, you can specify `NSValueTransformers` for your properties:
 
     + (NSValueTransformer *)episodeTypeJSONTransformer {
