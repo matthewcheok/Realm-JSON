@@ -97,7 +97,7 @@ Assume it is a `Vehicle` class which tipe is either `VehicleType.Car` (then has 
         @"maxSpeed": @"maxSpeed";
     };
     if (self.type == VehicleType.Car) {
-        @"licensePlate": @"licensePlate";
+        mapping[@"licensePlate"] = @"licensePlate";
     }
     return mapping.copy;
 }
