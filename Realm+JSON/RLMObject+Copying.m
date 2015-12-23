@@ -17,10 +17,17 @@
 
 @end
 
+@interface RLMSchema (Copying_Internal)
+
++ (Class)classForString:(NSString *)className;
+
+@end
+
 @implementation RLMObject (Copying)
 
 - (instancetype)shallowCopy {
-    id object = [[NSClassFromString(self.objectSchema.className) alloc] init];
+    Class objClass = [RLMSchema classForString:self.objectSchema.className];
+    id object = [[objClass alloc] init];
     [object mergePropertiesFromObject:self];
     
     return object;
@@ -64,7 +71,8 @@
 
 
 - (instancetype)deepCopy {
-    RLMObject *object = [[NSClassFromString(self.objectSchema.className) alloc] init];
+    Class objClass = [RLMSchema classForString:self.objectSchema.className];
+    RLMObject *object = [[objClass alloc] init];
     
     for (RLMProperty *property in self.objectSchema.properties) {
 
