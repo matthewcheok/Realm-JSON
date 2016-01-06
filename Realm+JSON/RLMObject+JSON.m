@@ -258,6 +258,8 @@ static NSInteger const kCreateBatchSize = 100;
 			}
 
 			[result setValue:value forKeyPath:dictionaryKeyPath];
+		} else {
+			[result setValue:[NSNull null] forKeyPath:dictionaryKeyPath];
 		}
 	}
 
