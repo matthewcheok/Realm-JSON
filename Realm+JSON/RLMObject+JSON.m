@@ -184,6 +184,7 @@ static NSInteger const kCreateBatchSize = 100;
 				if ([value isKindOfClass:[NSDictionary class]]) {
                     value = [propertyClass mc_createObjectFromJSONDictionary:value inRealm:realm];
                 } else if (![value isKindOfClass:[NSArray class]]) {
+                    value = [self primaryId:value forPropertyClass:propertyClass];
                     value = [propertyClass objectInRealm:realm forPrimaryKey:value];
                 } else {
                     value = nil;
@@ -207,7 +208,8 @@ static NSInteger const kCreateBatchSize = 100;
                             if ([item isKindOfClass:[NSDictionary class]]) {
                                 [array addObject:[elementClass mc_createObjectFromJSONDictionary:item inRealm:realm]];
                             } else {
-                                id object = [elementClass objectInRealm:realm forPrimaryKey:item];
+                                id primaryId = [self primaryId:item forPropertyClass:elementClass];
+                                id object = [elementClass objectInRealm:realm forPrimaryKey:primaryId];
                                 
                                 if (object) {
                                     [array addObject:object];
@@ -240,6 +242,23 @@ static NSInteger const kCreateBatchSize = 100;
 	}
 
 	return [result copy];
+}
+
++ (id)primaryId:(id)primaryId forPropertyClass:(Class)propertyClass
+{
+    if ([propertyClass respondsToSelector:@selector(primaryKey)]) {
+        NSString *primaryKey = [propertyClass primaryKey];
+        
+        if ([propertyClass instancesRespondToSelector:NSSelectorFromString(primaryKey)]) {
+            NSValueTransformer *primaryIdTransformer = [propertyClass mc_transformerForPropertyKey:primaryKey];
+            
+            if (primaryIdTransformer) {
+                primaryId = [primaryIdTransformer transformedValue:primaryId];
+            }
+        }
+    }
+    
+    return primaryId;
 }
 
 - (id)mc_createJSONDictionary {
