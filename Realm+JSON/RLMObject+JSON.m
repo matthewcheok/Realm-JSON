@@ -166,6 +166,11 @@ static NSInteger const kCreateBatchSize = 100;
 		id value = [dictionary valueForKeyPath:dictionaryKeyPath];
 
 		if (value) {
+			if ([value isEqual:[NSNull null]]) {
+				[result setValue:value forKeyPath:objectKeyPath];
+				continue;
+			}
+
 			Class propertyClass = [[self class] mc_classForPropertyKey:objectKeyPath];
 
 			NSValueTransformer *transformer = [[self class] mc_transformerForPropertyKey:objectKeyPath];
