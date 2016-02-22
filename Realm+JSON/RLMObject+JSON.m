@@ -300,7 +300,7 @@ static NSMutableDictionary *mappingInForClassName = nil;
 
 	NSMutableDictionary *result = [NSMutableDictionary dictionary];
     for (RLMProperty *property in schema.properties) {
-        result[property.name] = property.name;
+        result[property.name camelToSnakeCase] = property.name;
 
     }
 
