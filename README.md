@@ -85,6 +85,16 @@ You should specify the inbound and outbound JSON mapping on your `RLMObject` sub
       };
     }
 
+JSON preprocessing can be done by implementing `jsonPreprocessing:` static method:
+
+```ObjC
+- (NSDictionary *)jsonPreprocessing:(NSDictionary *)dictionary {
+    NSMutableDictionary *dict = [[NSMutableDictionary alloc] initWithDictionary:dictionary];
+    dict[@"releaseCount"] = @(0);
+    return dict.copy;
+}
+```
+
 Leaving out either one of the above will result in a mapping that assumes camelCase for your properties which map to snake_case for the JSON equivalents.
 
 As you can do with Mantle, you can specify `NSValueTransformers` for your properties:
