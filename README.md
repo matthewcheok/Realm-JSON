@@ -18,7 +18,9 @@ A concise [Mantle](https://github.com/Mantle/Mantle)-like way of working with [R
 
 Add the following to your [CocoaPods](http://cocoapods.org/) Podfile
 
-    pod 'Realm+JSON', '~> 0.2'
+```ruby
+pod 'Realm+JSON', '~> 0.2'
+```
 
 or clone as a git submodule,
 
@@ -28,34 +30,38 @@ or just copy files in the ```Realm+JSON``` folder into your project.
 
 Simply declare your model as normal:
 
-    typedef NS_ENUM(NSInteger, MCEpisodeType) {
-        MCEpisodeTypeFree = 0,
-        MCEpisodeTypePaid
-    };
+```ObjC
+typedef NS_ENUM(NSInteger, MCEpisodeType) {
+    MCEpisodeTypeFree = 0,
+    MCEpisodeTypePaid
+};
 
-    @interface MCEpisode : RLMObject
+@interface MCEpisode : RLMObject
 
-    @property NSInteger episodeID;
-    @property NSInteger episodeNumber;
-    @property MCEpisodeType episodeType;
+@property NSInteger episodeID;
+@property NSInteger episodeNumber;
+@property MCEpisodeType episodeType;
 
-    @property NSString *title;
-    @property NSString *subtitle;
-    @property NSString *thumbnailURL;
+@property NSString *title;
+@property NSString *subtitle;
+@property NSString *thumbnailURL;
 
-    @property NSDate *publishedDate;
+@property NSDate *publishedDate;
 
-    @end
+@end
 
-    RLM_ARRAY_TYPE(MCEpisode)
+RLM_ARRAY_TYPE(MCEpisode)
+```
 
 Then pass the result of `NSJSONSerialization` or `AFNetworking` as follows:
 
-      [MCEpisode createOrUpdateInRealm:[RLMRealm defaultRealm] withJSONArray:array];
-
+```ObjC
+[MCEpisode createOrUpdateInRealm:[RLMRealm defaultRealm] withJSONArray:array];
+```
 or
-
-      [MCEpisode createOrUpdateInRealm:[RLMRealm defaultRealm] withJSONDictionary:dictionary];
+```ObjC
+[MCEpisode createOrUpdateInRealm:[RLMRealm defaultRealm] withJSONDictionary:dictionary];
+```
 
 Use the `-JSONDictionary` method to get a JSON-ready dictionary for your network requests.
 
@@ -63,32 +69,36 @@ Use the `-JSONDictionary` method to get a JSON-ready dictionary for your network
 
 You should specify the inbound and outbound JSON mapping on your `RLMObject` subclass like this:
 
-    + (NSDictionary *)JSONInboundMappingDictionary {
-      return @{
-             @"episode.title": @"title",
-             @"episode.description": @"subtitle",
-             @"episode.id": @"episodeID",
-             @"episode.episode_number": @"episodeNumber",
-             @"episode.episode_type": @"episodeType",
-             @"episode.thumbnail_url": @"thumbnailURL",
-             @"episode.published_at": @"publishedDate",
-      };
-    }
+```ObjC
++ (NSDictionary *)JSONInboundMappingDictionary {
+    return @{
+        @"episode.title": @"title",
+        @"episode.description": @"subtitle",
+        @"episode.id": @"episodeID",
+        @"episode.episode_number": @"episodeNumber",
+        @"episode.episode_type": @"episodeType",
+        @"episode.thumbnail_url": @"thumbnailURL",
+        @"episode.published_at": @"publishedDate",
+    };
+}
+```
 
-    + (NSDictionary *)JSONOutboundMappingDictionary {
-      return @{
-             @"title": @"title",
-             @"subtitle": @"episode.description",
-             @"episodeID": @"id",
-             @"episodeNumber": @"episode.number",
-             @"publishedDate": @"published_at",
-      };
-    }
+```ObjC
++ (NSDictionary *)JSONOutboundMappingDictionary {
+    return @{
+        @"title": @"title",
+        @"subtitle": @"episode.description",
+        @"episodeID": @"id",
+        @"episodeNumber": @"episode.number",
+        @"publishedDate": @"published_at",
+    };
+}
+```
 
 JSON preprocessing can be done by implementing `jsonPreprocessing:` static method:
 
 ```ObjC
-- (NSDictionary *)jsonPreprocessing:(NSDictionary *)dictionary {
++ (NSDictionary *)preprocessedJSON:(NSDictionary *)dictionary {
     NSMutableDictionary *dict = [[NSMutableDictionary alloc] initWithDictionary:dictionary];
     dict[@"releaseCount"] = @(0);
     return dict.copy;
@@ -99,24 +109,26 @@ Leaving out either one of the above will result in a mapping that assumes camelC
 
 As you can do with Mantle, you can specify `NSValueTransformers` for your properties:
 
-    + (NSValueTransformer *)episodeTypeJSONTransformer {
-      return [MCJSONValueTransformer valueTransformerWithMappingDictionary:@{
-                  @"free": @(MCEpisodeTypeFree),
-                  @"paid": @(MCEpisodeTypePaid)
-          }];
-    }
+```ObjC
++ (NSValueTransformer *)episodeTypeJSONTransformer {
+    return [MCJSONValueTransformer valueTransformerWithMappingDictionary:@{
+        @"free": @(MCEpisodeTypeFree),
+        @"paid": @(MCEpisodeTypePaid)
+    }];
+}
+```
 
 ## Working with background threads
 
 Realm requires that you use different `RLMRealm` objects when working across different threads. This means you shouldn't access the same `RLMObject` instances from different threads. To make this easier to work with, use `- primaryKeyValue` to retrieve the wrapped primary key value from an instance and query for it later using `+ objectInRealm:withPrimaryKeyValue:`.
 
-    id primaryKeyValue = [episode primaryKeyValue];
-    dispatch_async(dispatch_get_main_queue(), ^{
-        MCEpisode *episode = [MCEpisode objectInRealm:[RLMRealm defaultRealm] withPrimaryKeyValue:primaryKeyValue];
-
-        // do something with episode here
-    });
-
+```ObjC
+id primaryKeyValue = [episode primaryKeyValue];
+dispatch_async(dispatch_get_main_queue(), ^{
+    MCEpisode *episode = [MCEpisode objectInRealm:[RLMRealm defaultRealm] withPrimaryKeyValue:primaryKeyValue];
+    // do something with episode here
+});
+```
 
 ## Working with (temporary) copies (RLMObject+Copying)
 
@@ -124,16 +136,18 @@ If you need to display UI that may or may not change an object's properties, it 
 
 Methods `- shallowCopy` and `- mergePropertiesFromObject:` are provided. The later of which needs to be performed in a realm transaction.
 
-    #import <Realm+Copying.h>
+```ObjC
+#import <Realm+Copying.h>
 
-    MCEpisode *anotherEpisode = [episode shallowCopy];
-    anotherEpisode.title = @"New title";
+MCEpisode *anotherEpisode = [episode shallowCopy];
+anotherEpisode.title = @"New title";
 
-    // ...
+// ...
 
-    [episode performInTransaction:^{
-        [episode mergePropertiesFromObject:anotherEpisode];
-    }];
+[episode performInTransaction:^{
+    [episode mergePropertiesFromObject:anotherEpisode];
+}];
+```
 
 Additionally, method `- deepCopy` is provided. Unlike `- shallowCopy`, it maintains the object's primary key.
 
