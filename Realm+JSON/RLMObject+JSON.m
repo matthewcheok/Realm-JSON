@@ -203,6 +203,16 @@ static NSInteger const kCreateBatchSize = 100;
 			if ([objectKeyPath isEqualToString:@"self"]) {
 				return value;
 			}
+            
+            if ([value isEqual:[NSNull null]]) {
+                if ([propertyClass isSubclassOfClass:[NSObject class]]) {
+                    if ([NSString class] == propertyClass || [NSDate class] == propertyClass) {
+                        continue;
+                    }
+                } else {
+                    continue;
+                }
+            }
 
 			NSArray *keyPathComponents = [objectKeyPath componentsSeparatedByString:@"."];
 			id currentDictionary = result;
