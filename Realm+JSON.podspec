@@ -17,5 +17,5 @@ Pod::Spec.new do |s|
   s.source_files = 'Realm+JSON/*.{h,m}'
   s.public_header_files = 'Realm+JSON/*.h'
 
-  s.dependency 'Realm', '~> 1.0'
+  s.dependency 'Realm', '~> 2.0'
 end
